@@ -20,4 +20,4 @@ BU HAFTA YAZDIĞIM KODLARIN NE YAPTIĞI:
 - ANA EKRANDAN KİTAP LİSTESİNE GEÇİŞ, REACT NAVİGATİON STACK ÜZERİNDEN YAPILIYOR.
 
 GEREKLİ VİDEO LİNKİM:
-[text](https://drive.google.com/file/d/1N64NuiFBcXw8qWh4EkDkefP5K82_L-1E/view?usp=drive_link)
+[1. HAFTA VİDEOSU](https://drive.google.com/file/d/1N64NuiFBcXw8qWh4EkDkefP5K82_L-1E/view?usp=drive_link)
