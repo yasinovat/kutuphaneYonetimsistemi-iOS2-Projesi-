@@ -1,0 +1,4 @@
+{
+  "sql.lintingEnabled": false,
+  "mssql.intelliSense.enableErrorChecking": false
+}
