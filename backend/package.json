@@ -1,26 +1,29 @@
 {
-    "name":  "kys-backend",
-    "version":  "1.0.0",
-    "description":  "Library management backend API",
-    "main":  "src/server.js",
-    "scripts":  {
-                    "db:init":  "node src/scripts/initDb.js",
-                    "dev":  "nodemon src/server.js",
-                    "start":  "node src/server.js"
-                },
-    "keywords":  [
-                     "nodejs",
-                     "express",
-                     "postgresql"
-                 ],
-    "license":  "MIT",
-    "dependencies":  {
-                         "cors":  "^2.8.5",
-                         "dotenv":  "^16.4.5",
-                         "express":  "^4.19.2",
-                         "pg":  "^8.11.5"
-                     },
-    "devDependencies":  {
-                            "nodemon":  "^3.1.4"
-                        }
+    "name": "kys-backend",
+    "version": "1.0.0",
+    "description": "Library management backend API",
+    "main": "src/server.js",
+    "scripts": {
+        "db:init": "node src/scripts/initDb.js",
+        "admin:create": "node src/scripts/createAdminUser.js",
+        "dev": "nodemon src/server.js",
+        "start": "node src/server.js"
+    },
+    "keywords": [
+        "nodejs",
+        "express",
+        "postgresql"
+    ],
+    "license": "MIT",
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "cors": "^2.8.5",
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2",
+        "jsonwebtoken": "^9.0.3",
+        "pg": "^8.11.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.4"
+    }
 }
