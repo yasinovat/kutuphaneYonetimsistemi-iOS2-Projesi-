@@ -6,6 +6,21 @@ const DEFAULT_API_BASE_URL =
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_BASE_URL;
 
+function buildQueryString(params = {}) {
+  const searchParams = new URLSearchParams();
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value === undefined || value === null || value === '') {
+      return;
+    }
+
+    searchParams.append(key, String(value));
+  });
+
+  const queryString = searchParams.toString();
+  return queryString ? `?${queryString}` : '';
+}
+
 // Token ile request gönder
 async function apiFetch(endpoint, options = {}) {
   const token = await AsyncStorage.getItem('userToken');
@@ -77,9 +92,37 @@ export async function fetchBooks() {
   });
 }
 
+export async function fetchBooksWithFilters(filters = {}) {
+  const queryString = buildQueryString(filters);
+
+  return apiFetch(`/books${queryString}`, {
+    method: 'GET'
+  });
+}
+
 export async function fetchBookById(bookId) {
   return apiFetch(`/books/${bookId}`, {
     method: 'GET'
+  });
+}
+
+export async function createBook(bookData) {
+  return apiFetch('/books', {
+    method: 'POST',
+    body: JSON.stringify(bookData)
+  });
+}
+
+export async function updateBook(bookId, bookData) {
+  return apiFetch(`/books/${bookId}`, {
+    method: 'PUT',
+    body: JSON.stringify(bookData)
+  });
+}
+
+export async function deleteBook(bookId) {
+  return apiFetch(`/books/${bookId}`, {
+    method: 'DELETE'
   });
 }
 

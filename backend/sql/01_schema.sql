@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS books (
   id SERIAL PRIMARY KEY,
   title VARCHAR(200) NOT NULL,
   author VARCHAR(120) NOT NULL,
+  genre VARCHAR(80) NOT NULL DEFAULT 'Genel',
   isbn VARCHAR(20) UNIQUE NOT NULL,
   published_year INT,
   total_copies INT NOT NULL DEFAULT 1,
@@ -19,6 +20,9 @@ CREATE TABLE IF NOT EXISTS books (
   CONSTRAINT chk_total_copies_positive CHECK (total_copies > 0),
   CONSTRAINT chk_available_copies_non_negative CHECK (available_copies >= 0)
 );
+
+ALTER TABLE books
+  ADD COLUMN IF NOT EXISTS genre VARCHAR(80) NOT NULL DEFAULT 'Genel';
 
 CREATE TABLE IF NOT EXISTS members (
   id SERIAL PRIMARY KEY,
@@ -54,3 +58,6 @@ CREATE INDEX IF NOT EXISTS idx_loans_book_id ON loans(book_id);
 CREATE INDEX IF NOT EXISTS idx_loans_member_id ON loans(member_id);
 CREATE INDEX IF NOT EXISTS idx_loan_requests_book_id ON loan_requests(book_id);
 CREATE INDEX IF NOT EXISTS idx_loan_requests_member_id ON loan_requests(member_id);
+CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
+CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
+CREATE INDEX IF NOT EXISTS idx_books_genre ON books(genre);

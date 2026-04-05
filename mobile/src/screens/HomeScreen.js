@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.bookButtonText}>Kitap Listesini Aç</Text>
         </TouchableOpacity>
 
-        <Text style={styles.versionText}>Week 3: Frontend Authentication</Text>
+        <Text style={styles.versionText}>Week 4: Book CRUD's</Text>
       </View>
     </ScrollView>
   );

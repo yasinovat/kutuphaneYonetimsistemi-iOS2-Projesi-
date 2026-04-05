@@ -10,6 +10,8 @@ import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import BookListScreen from './src/screens/BookListScreen';
+import BookDetailScreen from './src/screens/BookDetailScreen';
+import BookFormScreen from './src/screens/BookFormScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -70,6 +72,16 @@ function AppStack() {
         name="BookList"
         component={BookListScreen}
         options={{ title: 'Kitap Listesi' }}
+      />
+      <Stack.Screen
+        name="BookDetail"
+        component={BookDetailScreen}
+        options={{ title: 'Kitap Detayi' }}
+      />
+      <Stack.Screen
+        name="BookForm"
+        component={BookFormScreen}
+        options={{ title: 'Kitap Islemi' }}
       />
     </Stack.Navigator>
   );
