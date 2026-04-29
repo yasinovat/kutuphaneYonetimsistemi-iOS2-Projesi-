@@ -6,6 +6,7 @@ import { ActivityIndicator, View, TouchableOpacity, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
+import { BooksProvider } from './src/contexts/BooksContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -76,12 +77,12 @@ function AppStack() {
       <Stack.Screen
         name="BookDetail"
         component={BookDetailScreen}
-        options={{ title: 'Kitap Detayi' }}
+        options={{ title: 'Kitap Detayı' }}
       />
       <Stack.Screen
         name="BookForm"
         component={BookFormScreen}
-        options={{ title: 'Kitap Islemi' }}
+        options={{ title: 'Kitap İşlemi' }}
       />
     </Stack.Navigator>
   );
@@ -110,7 +111,9 @@ function RootNavigator() {
 export default function App() {
   return (
     <AuthProvider>
-      <RootNavigator />
+      <BooksProvider>
+        <RootNavigator />
+      </BooksProvider>
     </AuthProvider>
   );
 }

@@ -32,7 +32,7 @@ async function getAllBooks(filters = {}) {
   const whereSql = whereClauses.length > 0 ? `WHERE ${whereClauses.join(' AND ')}` : '';
 
   const query = `
-    SELECT id, title, author, genre, isbn, published_year, total_copies, available_copies, created_at
+    SELECT id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url, created_at
     FROM books
     ${whereSql}
     ORDER BY id ASC
@@ -44,7 +44,7 @@ async function getAllBooks(filters = {}) {
 
 async function getBookById(id) {
   const query = `
-    SELECT id, title, author, genre, isbn, published_year, total_copies, available_copies, created_at
+    SELECT id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url, created_at
     FROM books
     WHERE id = $1
   `;
@@ -65,11 +65,11 @@ async function getActiveLoanCountByBookId(bookId) {
   return result.rows[0]?.active_loan_count || 0;
 }
 
-async function createBook({ title, author, genre, isbn, published_year, total_copies, available_copies }) {
+async function createBook({ title, author, genre, isbn, published_year, total_copies, available_copies, cover_url = null }) {
   const query = `
-    INSERT INTO books (title, author, genre, isbn, published_year, total_copies, available_copies)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
-    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, created_at
+    INSERT INTO books (title, author, genre, isbn, published_year, total_copies, available_copies, cover_url)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url, created_at
   `;
 
   const values = [
@@ -79,14 +79,15 @@ async function createBook({ title, author, genre, isbn, published_year, total_co
     isbn,
     published_year,
     total_copies,
-    available_copies
+    available_copies,
+    cover_url
   ];
 
   const result = await pool.query(query, values);
   return result.rows[0];
 }
 
-async function updateBook({ id, title, author, genre, isbn, published_year, total_copies, available_copies }) {
+async function updateBook({ id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url }) {
   const query = `
     UPDATE books
     SET
@@ -96,12 +97,13 @@ async function updateBook({ id, title, author, genre, isbn, published_year, tota
       isbn = COALESCE($5, isbn),
       published_year = COALESCE($6, published_year),
       total_copies = COALESCE($7, total_copies),
-      available_copies = COALESCE($8, available_copies)
+      available_copies = COALESCE($8, available_copies),
+      cover_url = COALESCE($9, cover_url)
     WHERE id = $1
-    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, created_at
+    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url, created_at
   `;
 
-  const values = [id, title, author, genre, isbn, published_year, total_copies, available_copies];
+  const values = [id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url];
   const result = await pool.query(query, values);
   return result.rows[0] || null;
 }
@@ -110,7 +112,7 @@ async function deleteBook(id) {
   const query = `
     DELETE FROM books
     WHERE id = $1
-    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, created_at
+    RETURNING id, title, author, genre, isbn, published_year, total_copies, available_copies, cover_url, created_at
   `;
 
   const result = await pool.query(query, [id]);

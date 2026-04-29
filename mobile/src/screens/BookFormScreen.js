@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -12,6 +12,7 @@ import {
   View
 } from 'react-native';
 import { createBook, fetchBookById, updateBook } from '../services/api';
+import { BooksContext } from '../contexts/BooksContext';
 
 const EMPTY_FORM = {
   title: '',
@@ -26,6 +27,7 @@ const EMPTY_FORM = {
 export default function BookFormScreen({ route, navigation }) {
   const mode = route.params?.mode || 'create';
   const initialBook = route.params?.book || null;
+  const { refreshBooks } = useContext(BooksContext);
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
@@ -129,6 +131,8 @@ export default function BookFormScreen({ route, navigation }) {
       } else {
         await createBook(payload);
       }
+
+      await refreshBooks();
 
       Alert.alert('Başarılı', mode === 'edit' ? 'Kitap güncellendi.' : 'Kitap eklendi.', [
         { text: 'Tamam', onPress: () => navigation.navigate('BookList') }

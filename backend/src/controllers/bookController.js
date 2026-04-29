@@ -105,8 +105,9 @@ async function addBook(req, res) {
       genre,
       isbn,
       published_year,
-      total_copies,
-      available_copies
+        total_copies,
+        available_copies,
+        cover_url
     } = req.body;
 
     if (!title || !author || !genre || !isbn) {
@@ -138,7 +139,8 @@ async function addBook(req, res) {
       isbn,
       published_year: parsedPublishedYear,
       total_copies: parsedTotalCopies,
-      available_copies: parsedAvailableCopies
+      available_copies: parsedAvailableCopies,
+      cover_url
     });
 
     return res.status(201).json(newBook);
@@ -166,7 +168,8 @@ async function editBook(req, res) {
       isbn,
       published_year,
       total_copies,
-      available_copies
+      available_copies,
+      cover_url
     } = req.body;
 
     if (
@@ -217,7 +220,8 @@ async function editBook(req, res) {
       isbn: isbn ?? null,
       published_year: parsedPublishedYear,
       total_copies: parsedTotalCopies,
-      available_copies: parsedAvailableCopies
+      available_copies: parsedAvailableCopies,
+      cover_url: cover_url ?? undefined
     });
 
     if (!updatedBook) {

@@ -1,22 +1,21 @@
 import React, { useContext, useEffect, useState } from 'react';
-import {
-  ActivityIndicator,
-  Alert,
-  Platform,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View
-} from 'react-native';
+import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+
 import { AuthContext } from '../contexts/AuthContext';
+import { BooksContext } from '../contexts/BooksContext';
 import { deleteBook, fetchBookById } from '../services/api';
 
 export default function BookDetailScreen({ route, navigation }) {
   const { user } = useContext(AuthContext);
+  const { getBookById, refreshBooks } = useContext(BooksContext);
+  const { getCoverForBook } = useContext(BooksContext);
   const { bookId } = route.params || {};
-  const [book, setBook] = useState(null);
-  const [loading, setLoading] = useState(true);
+  // Önce iletilen kitabı tercih et (kapakUrl içerebilir); yoksa context'ten al ve önbellekteki kapak URL'si ile tamamla
+  const rawInitial = route.params?.book || getBookById(bookId);
+  const cachedCover = getCoverForBook(rawInitial?.id ?? rawInitial?.isbn ?? `${rawInitial?.title || ''}-${rawInitial?.author || ''}`);
+  const initialBook = rawInitial ? { ...rawInitial, coverUrl: rawInitial.coverUrl || cachedCover } : null;
+  const [book, setBook] = useState(initialBook);
+  const [loading, setLoading] = useState(!initialBook);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
 
@@ -24,13 +23,13 @@ export default function BookDetailScreen({ route, navigation }) {
     const loadBook = async () => {
       try {
         if (!bookId) {
-          throw new Error('Kitap bilgisi bulunamadi.');
+          throw new Error('Kitap bilgisi bulunamadı.');
         }
 
         const data = await fetchBookById(bookId);
         setBook(data);
       } catch (err) {
-        setError(err.message || 'Kitap detayi yuklenemedi.');
+        setError(err.message || 'Kitap detayı yüklenemedi.');
       } finally {
         setLoading(false);
       }
@@ -43,6 +42,7 @@ export default function BookDetailScreen({ route, navigation }) {
     try {
       setDeleting(true);
       await deleteBook(book.id);
+      await refreshBooks();
       Alert.alert('Başarılı', 'Kitap silindi.', [
         { text: 'Tamam', onPress: () => navigation.navigate('BookList') }
       ]);
@@ -55,7 +55,7 @@ export default function BookDetailScreen({ route, navigation }) {
 
   const handleDelete = async () => {
     if (Platform.OS === 'web') {
-      const shouldDelete = window.confirm('Bu kitabi silmek istedigine emin misin?');
+      const shouldDelete = window.confirm('Bu kitabı silmek istediğine emin misin?');
 
       if (!shouldDelete) {
         return;
@@ -101,19 +101,40 @@ export default function BookDetailScreen({ route, navigation }) {
 
   const isAdmin = user?.role === 'admin';
 
+  const initials = book.title
+    ?.split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join('') || 'KB';
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.card}>
-        <Text style={styles.title}>{book.title}</Text>
-        <Text style={styles.meta}>Yazar: {book.author}</Text>
-        <Text style={styles.meta}>Tür: {book.genre || 'Genel'}</Text>
-        <Text style={styles.meta}>ISBN: {book.isbn}</Text>
-        <Text style={styles.meta}>Yayın Yılı: {book.published_year || '-'}</Text>
-        <Text style={styles.meta}>Toplam Kopya: {book.total_copies}</Text>
-        <Text style={styles.meta}>Mevcut Kopya: {book.available_copies}</Text>
-        <Text style={[styles.status, book.available_copies > 0 ? styles.inStock : styles.outOfStock]}>
-          {book.available_copies > 0 ? 'Stokta' : 'Tükendi'}
-        </Text>
+      <View style={styles.heroCard}>
+        <View style={styles.cover}>
+          {book.coverUrl ? (
+            <Image source={{ uri: book.coverUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+          ) : (
+            <Text style={styles.coverText}>{initials}</Text>
+          )}
+        </View>
+
+        <View style={styles.heroContent}>
+          <Text style={styles.title}>{book.title}</Text>
+          <Text style={styles.meta}>{book.author}</Text>
+          <Text style={styles.metaSecondary}>{book.genre || 'Genel'}</Text>
+          <Text style={[styles.status, book.available_copies > 0 ? styles.inStock : styles.outOfStock]}>
+            {book.available_copies > 0 ? 'Stokta' : 'Tükendi'}
+          </Text>
+        </View>
+      </View>
+
+      <View style={styles.infoCard}>
+        <Text style={styles.sectionTitle}>Kitap Bilgileri</Text>
+        <View style={styles.infoRow}><Text style={styles.infoKey}>ISBN</Text><Text style={styles.infoValue}>{book.isbn}</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoKey}>Yayın Yılı</Text><Text style={styles.infoValue}>{book.published_year || '-'}</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoKey}>Toplam Kopya</Text><Text style={styles.infoValue}>{book.total_copies}</Text></View>
+        <View style={styles.infoRow}><Text style={styles.infoKey}>Mevcut Kopya</Text><Text style={styles.infoValue}>{book.available_copies}</Text></View>
       </View>
 
       {isAdmin && (
@@ -147,23 +168,52 @@ const styles = StyleSheet.create({
     backgroundColor: '#f4f7f5',
     flexGrow: 1
   },
-  card: {
+  heroCard: {
+    flexDirection: 'row',
+    gap: 16,
     backgroundColor: '#fff',
-    borderRadius: 16,
+    borderRadius: 22,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#d6e2dc'
+    borderColor: '#d6e2dc',
+    shadowColor: '#0b3d2e',
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 3
+  },
+  cover: {
+    width: 76,
+    minHeight: 104,
+    borderRadius: 18,
+    backgroundColor: '#0b3d2e',
+    padding: 12,
+    justifyContent: 'space-between'
+  },
+  coverText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '900'
+  },
+  heroContent: {
+    flex: 1,
+    justifyContent: 'center'
   },
   title: {
     fontSize: 24,
     fontWeight: '800',
     color: '#0b3d2e',
-    marginBottom: 12
+    marginBottom: 6
   },
   meta: {
     fontSize: 15,
     color: '#2b4f45',
-    marginBottom: 6
+    fontWeight: '700'
+  },
+  metaSecondary: {
+    fontSize: 13,
+    color: '#63756f',
+    marginTop: 4
   },
   status: {
     marginTop: 12,
@@ -180,6 +230,36 @@ const styles = StyleSheet.create({
   outOfStock: {
     backgroundColor: '#fde8e8',
     color: '#b42318'
+  },
+  infoCard: {
+    marginTop: 14,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#d6e2dc'
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0b3d2e',
+    marginBottom: 12
+  },
+  infoRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 14,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eef3ef'
+  },
+  infoKey: {
+    color: '#667d75',
+    fontWeight: '700'
+  },
+  infoValue: {
+    color: '#143d31',
+    fontWeight: '800'
   },
   actions: {
     marginTop: 16,
@@ -200,6 +280,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: 'center'
+  },
+  disabledButton: {
+    opacity: 0.7
   },
   dangerButtonText: {
     color: '#fff',
