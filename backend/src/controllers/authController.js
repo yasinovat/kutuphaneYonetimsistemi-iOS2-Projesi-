@@ -41,11 +41,21 @@ async function register(req, res) {
       role: 'member'
     });
 
-    await createMember({
+    const newMember = await createMember({
       full_name,
       email,
       phone: phone || null
     });
+
+    // User'ı member ile bağla
+    if (newMember && newUser) {
+      const { updateUser } = require('../models/userModel');
+      await updateUser({
+        id: newUser.id,
+        member_id: newMember.id
+      });
+      newUser.member_id = newMember.id;
+    }
 
     const token = generateAuthToken(newUser);
 
@@ -89,6 +99,7 @@ async function login(req, res) {
         full_name: user.full_name,
         email: user.email,
         role: user.role,
+        member_id: user.member_id,
         created_at: user.created_at
       }
     });

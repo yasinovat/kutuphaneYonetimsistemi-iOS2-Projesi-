@@ -93,6 +93,25 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.quickActionText}>Filtreleri temizle</Text>
           </Pressable>
         </View>
+
+        <View style={styles.quickActionsRow}>
+          <Pressable
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate('LoanRequestList')}
+          >
+            <Text style={styles.quickActionTitle}>İsteklerim</Text>
+            <Text style={styles.quickActionText}>Ödünç isteklerini göster</Text>
+          </Pressable>
+          {user?.role === 'admin' && (
+            <Pressable
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('AdminLoanRequests')}
+            >
+              <Text style={styles.quickActionTitle}>Admin Panel</Text>
+              <Text style={styles.quickActionText}>İstekleri yönet</Text>
+            </Pressable>
+          )}
+        </View>
       </View>
 
       <View style={styles.sectionBox}>

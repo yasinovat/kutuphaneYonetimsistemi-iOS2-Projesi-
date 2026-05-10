@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET } = require('../config/auth');
+const { pool } = require('../config/db');
 
 function extractBearerToken(authHeader) {
   if (!authHeader || typeof authHeader !== 'string') {
@@ -16,7 +17,7 @@ function extractBearerToken(authHeader) {
   return match[1].trim().replace(/^"|"$/g, '');
 }
 
-function verifyToken(req, res, next) {
+async function verifyToken(req, res, next) {
   try {
     const token = extractBearerToken(req.headers.authorization);
 
@@ -26,10 +27,21 @@ function verifyToken(req, res, next) {
 
     const decoded = jwt.verify(token, JWT_SECRET);
 
+    // Fetch user with member_id from database
+    const query = 'SELECT id, email, role, member_id FROM users WHERE id = $1';
+    const result = await pool.query(query, [decoded.sub]);
+
+    if (result.rows.length === 0) {
+      return res.status(401).json({ message: 'Kullanici bulunamadi.' });
+    }
+
+    const user = result.rows[0];
+
     req.user = {
-      id: decoded.sub,
-      email: decoded.email,
-      role: decoded.role
+      id: user.id,
+      email: user.email,
+      role: user.role,
+      member_id: user.member_id
     };
 
     return next();

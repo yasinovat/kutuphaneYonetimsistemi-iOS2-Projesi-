@@ -1,9 +1,19 @@
+CREATE TABLE IF NOT EXISTS members (
+  id SERIAL PRIMARY KEY,
+  full_name VARCHAR(120) NOT NULL,
+  email VARCHAR(120) UNIQUE NOT NULL,
+  phone VARCHAR(25),
+  membership_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 CREATE TABLE IF NOT EXISTS users (
   id SERIAL PRIMARY KEY,
   full_name VARCHAR(120) NOT NULL,
   email VARCHAR(120) UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role VARCHAR(30) NOT NULL DEFAULT 'admin',
+  member_id INT REFERENCES members(id) ON DELETE SET NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -16,24 +26,10 @@ CREATE TABLE IF NOT EXISTS books (
   published_year INT,
   total_copies INT NOT NULL DEFAULT 1,
   available_copies INT NOT NULL DEFAULT 1,
+  cover_url TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   CONSTRAINT chk_total_copies_positive CHECK (total_copies > 0),
   CONSTRAINT chk_available_copies_non_negative CHECK (available_copies >= 0)
-);
-
-ALTER TABLE books
-  ADD COLUMN IF NOT EXISTS genre VARCHAR(80) NOT NULL DEFAULT 'Genel';
-
-ALTER TABLE books
-  ADD COLUMN IF NOT EXISTS cover_url TEXT;
-
-CREATE TABLE IF NOT EXISTS members (
-  id SERIAL PRIMARY KEY,
-  full_name VARCHAR(120) NOT NULL,
-  email VARCHAR(120) UNIQUE NOT NULL,
-  phone VARCHAR(25),
-  membership_date DATE NOT NULL DEFAULT CURRENT_DATE,
-  created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE IF NOT EXISTS loans (
@@ -54,13 +50,18 @@ CREATE TABLE IF NOT EXISTS loan_requests (
   request_date DATE NOT NULL DEFAULT CURRENT_DATE,
   status VARCHAR(30) NOT NULL DEFAULT 'pending',
   note TEXT,
+  approved_by INT REFERENCES users(id) ON DELETE SET NULL,
+  approval_date TIMESTAMP,
+  rejection_reason TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_loan_requests_status ON loan_requests(status);
+CREATE INDEX IF NOT EXISTS idx_loan_requests_member_id ON loan_requests(member_id);
+CREATE INDEX IF NOT EXISTS idx_loan_requests_approved_by ON loan_requests(approved_by);
+CREATE INDEX IF NOT EXISTS idx_loan_requests_book_id ON loan_requests(book_id);
 CREATE INDEX IF NOT EXISTS idx_loans_book_id ON loans(book_id);
 CREATE INDEX IF NOT EXISTS idx_loans_member_id ON loans(member_id);
-CREATE INDEX IF NOT EXISTS idx_loan_requests_book_id ON loan_requests(book_id);
-CREATE INDEX IF NOT EXISTS idx_loan_requests_member_id ON loan_requests(member_id);
 CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
 CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
 CREATE INDEX IF NOT EXISTS idx_books_genre ON books(genre);

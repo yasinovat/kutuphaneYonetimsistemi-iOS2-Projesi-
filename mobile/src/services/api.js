@@ -43,7 +43,7 @@ async function apiFetch(endpoint, options = {}) {
     let errorMessage = `İstek başarısız (${response.status})`;
     try {
       const errorData = await response.json();
-      errorMessage = errorData.message || errorMessage;
+      errorMessage = errorData.error || errorData.message || errorMessage;
     } catch (e) {
       // JSON parse hatası, errorMessage'ı olduğu gibi kullan
     }
@@ -139,5 +139,59 @@ export async function updateUserProfile(userData) {
   return apiFetch(`/users/${savedUser.id}`, {
     method: 'PUT',
     body: JSON.stringify(userData)
+  });
+}
+
+// Loan Request endpoints
+export async function fetchMyLoanRequests() {
+  return apiFetch('/loan-requests/my-requests', {
+    method: 'GET'
+  });
+}
+
+export async function fetchPendingLoanRequests() {
+  return apiFetch('/loan-requests/pending', {
+    method: 'GET'
+  });
+}
+
+export async function fetchLoanRequestDetail(requestId) {
+  return apiFetch(`/loan-requests/${requestId}`, {
+    method: 'GET'
+  });
+}
+
+export async function fetchLoanRequestStats() {
+  return apiFetch('/loan-requests/stats', {
+    method: 'GET'
+  });
+}
+
+export async function createLoanRequest(loanRequestData) {
+  const data = await apiFetch('/loan-requests', {
+    method: 'POST',
+    body: JSON.stringify(loanRequestData)
+  });
+
+  return data;
+}
+
+export async function approveLoanRequest(requestId) {
+  return apiFetch(`/loan-requests/${requestId}/approve`, {
+    method: 'PUT',
+    body: JSON.stringify({})
+  });
+}
+
+export async function rejectLoanRequest(requestId, rejectionReason = null) {
+  return apiFetch(`/loan-requests/${requestId}/reject`, {
+    method: 'PUT',
+    body: JSON.stringify({ rejectionReason })
+  });
+}
+
+export async function cancelLoanRequest(requestId) {
+  return apiFetch(`/loan-requests/${requestId}/cancel`, {
+    method: 'PUT'
   });
 }

@@ -7,12 +7,17 @@ import { StatusBar } from 'expo-status-bar';
 
 import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
 import { BooksProvider } from './src/contexts/BooksContext';
+import { LoanRequestProvider } from './src/contexts/LoanRequestContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import BookListScreen from './src/screens/BookListScreen';
 import BookDetailScreen from './src/screens/BookDetailScreen';
 import BookFormScreen from './src/screens/BookFormScreen';
+import LoanRequestListScreen from './src/screens/LoanRequestListScreen';
+import LoanRequestDetailScreen from './src/screens/LoanRequestDetailScreen';
+import LoanRequestCreateScreen from './src/screens/LoanRequestCreateScreen';
+import AdminLoanRequestsScreen from './src/screens/AdminLoanRequestsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -42,7 +47,7 @@ function AuthStack() {
 
 // App stack (Home / BookList) - Protected routes(token varsa gösterilir)
 function AppStack() {
-  const { signOut } = useContext(AuthContext);
+  const { signOut, user } = useContext(AuthContext);
 
   return (
     <Stack.Navigator
@@ -84,6 +89,32 @@ function AppStack() {
         component={BookFormScreen}
         options={{ title: 'Kitap İşlemi' }}
       />
+
+      {/* Loan Request Screens */}
+      <Stack.Screen
+        name="LoanRequestList"
+        component={LoanRequestListScreen}
+        options={{ title: 'Ödünç Alma İsteklerim' }}
+      />
+      <Stack.Screen
+        name="LoanRequestDetail"
+        component={LoanRequestDetailScreen}
+        options={{ title: 'İstek Detayı' }}
+      />
+      <Stack.Screen
+        name="LoanRequestCreate"
+        component={LoanRequestCreateScreen}
+        options={{ title: 'Yeni Ödünç Alma İsteği' }}
+      />
+
+      {/* Admin Screens */}
+      {user?.role === 'admin' && (
+        <Stack.Screen
+          name="AdminLoanRequests"
+          component={AdminLoanRequestsScreen}
+          options={{ title: 'Ödünç Alma İstekleri' }}
+        />
+      )}
     </Stack.Navigator>
   );
 }
@@ -112,7 +143,9 @@ export default function App() {
   return (
     <AuthProvider>
       <BooksProvider>
-        <RootNavigator />
+        <LoanRequestProvider>
+          <RootNavigator />
+        </LoanRequestProvider>
       </BooksProvider>
     </AuthProvider>
   );

@@ -24,7 +24,7 @@ async function getUserById(id) {
 
 async function getUserByEmail(email) {
   const query = `
-    SELECT id, full_name, email, password_hash, role, created_at
+    SELECT id, full_name, email, password_hash, role, member_id, created_at
     FROM users
     WHERE email = $1
   `;
@@ -45,19 +45,20 @@ async function createUser({ full_name, email, password_hash, role }) {
   return result.rows[0];
 }
 
-async function updateUser({ id, full_name, email, role, password_hash }) {
+async function updateUser({ id, full_name, email, role, password_hash, member_id }) {
   const query = `
     UPDATE users
     SET
       full_name = COALESCE($2, full_name),
       email = COALESCE($3, email),
       role = COALESCE($4, role),
-      password_hash = COALESCE($5, password_hash)
+      password_hash = COALESCE($5, password_hash),
+      member_id = COALESCE($6, member_id)
     WHERE id = $1
-    RETURNING id, full_name, email, role, created_at
+    RETURNING id, full_name, email, role, member_id, created_at
   `;
 
-  const values = [id, full_name, email, role, password_hash];
+  const values = [id, full_name, email, role, password_hash, member_id];
   const result = await pool.query(query, values);
   return result.rows[0] || null;
 }
