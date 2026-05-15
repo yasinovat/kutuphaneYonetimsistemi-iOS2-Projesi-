@@ -10,6 +10,8 @@ import {
   Pressable,
   FlatList
 } from 'react-native';
+import { Platform } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { LoanRequestContext } from '../contexts/LoanRequestContext';
 import { BooksContext } from '../contexts/BooksContext';
 
@@ -18,6 +20,11 @@ export default function LoanRequestCreateScreen({ navigation }) {
   const { createNewRequest, error } = useContext(LoanRequestContext);
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [note, setNote] = useState('');
+  const todayIso = new Date().toISOString().split('T')[0];
+  const [desiredDate, setDesiredDate] = useState(todayIso);
+  const [deliveryDate, setDeliveryDate] = useState('');
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [isPickingDelivery, setIsPickingDelivery] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBookPicker, setShowBookPicker] = useState(false);
 
@@ -34,7 +41,7 @@ export default function LoanRequestCreateScreen({ navigation }) {
       setIsSubmitting(true);
       // bookId'yi integer olduğundan emin ol
       const bookIdNum = parseInt(selectedBookId, 10);
-      await createNewRequest(bookIdNum, note.trim() || null);
+      await createNewRequest(bookIdNum, note.trim() || null, desiredDate || null, deliveryDate || null);
       Alert.alert('Başarılı', 'Ödünç alma isteği oluşturuldu.', [
         { text: 'Tamam', onPress: () => navigation.goBack() }
       ]);
@@ -43,6 +50,51 @@ export default function LoanRequestCreateScreen({ navigation }) {
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDateChange = (event, selected) => {
+    setShowDatePicker(false);
+    if (event?.type === 'dismissed') {
+      setIsPickingDelivery(false);
+      return;
+    }
+    const d = selected || new Date();
+    const iso = d.toISOString().split('T')[0];
+    if (isPickingDelivery) setDeliveryDate(iso);
+    else setDesiredDate(iso);
+    setIsPickingDelivery(false);
+  };
+
+  const openDesiredDatePicker = () => {
+    if (Platform.OS === 'web') {
+      const input = window.prompt('İstenen tarih (YYYY-MM-DD):', desiredDate || todayIso);
+      if (!input) return;
+      const m = input.match(/^\d{4}-\d{2}-\d{2}$/);
+      if (!m) {
+        Alert.alert('Hata', 'Lütfen tarihi YYYY-AA-GG formatında girin.');
+        return;
+      }
+      setDesiredDate(input);
+      return;
+    }
+    setIsPickingDelivery(false);
+    setShowDatePicker(true);
+  };
+
+  const openDeliveryDatePicker = () => {
+    if (Platform.OS === 'web') {
+      const input = window.prompt('Teslim tarihi (YYYY-MM-DD):', deliveryDate || todayIso);
+      if (!input) return;
+      const m = input.match(/^\d{4}-\d{2}-\d{2}$/);
+      if (!m) {
+        Alert.alert('Hata', 'Lütfen tarihi YYYY-AA-GG formatında girin.');
+        return;
+      }
+      setDeliveryDate(input);
+      return;
+    }
+    setIsPickingDelivery(true);
+    setShowDatePicker(true);
   };
 
   const handleSelectBook = (book) => {
@@ -101,6 +153,37 @@ export default function LoanRequestCreateScreen({ navigation }) {
               editable={!isSubmitting}
             />
             <Text style={styles.charCount}>{note.length}/500</Text>
+          </View>
+
+          {/* Tarih Seçici */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Talep Edilen Tarih (İsteğe bağlı)</Text>
+            <Pressable
+              style={[styles.selectButton, !desiredDate && styles.selectButtonEmpty]}
+              onPress={openDesiredDatePicker}
+            >
+              <Text style={desiredDate ? styles.selectedDateText : styles.selectButtonPlaceholder}>
+                {desiredDate ? new Date(desiredDate).toLocaleDateString('tr-TR') : 'Tarih seçmek için tıklayın...'}
+              </Text>
+            </Pressable>
+            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Teslim Tarihi (Seçiniz)</Text>
+            <Pressable
+              style={[styles.selectButton, !deliveryDate && styles.selectButtonEmpty]}
+              onPress={openDeliveryDatePicker}
+            >
+              <Text style={deliveryDate ? styles.selectedDateText : styles.selectButtonPlaceholder}>
+                {deliveryDate ? new Date(deliveryDate).toLocaleDateString('tr-TR') : 'Teslim tarihi seçmek için tıklayın...'}
+              </Text>
+            </Pressable>
+            {showDatePicker && (
+              <DateTimePicker
+                value={isPickingDelivery ? (deliveryDate ? new Date(deliveryDate) : new Date()) : (desiredDate ? new Date(desiredDate) : new Date())}
+                mode="date"
+                display="calendar"
+                onChange={handleDateChange}
+                minimumDate={new Date()}
+              />
+            )}
           </View>
 
           {/* Bilgilendirme */}
@@ -225,6 +308,11 @@ const styles = StyleSheet.create({
   selectButtonPlaceholder: {
     color: '#9ca3af',
     fontSize: 14
+  },
+  selectedDateText: {
+    color: '#1f2937',
+    fontSize: 14,
+    fontWeight: '600'
   },
   selectedBookContent: {
     flex: 1

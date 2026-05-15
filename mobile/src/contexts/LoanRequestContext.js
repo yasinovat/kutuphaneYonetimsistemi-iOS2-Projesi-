@@ -87,10 +87,13 @@ export function LoanRequestProvider({ children }) {
   }, [user]);
 
   // Yeni istek oluştur
-  const createNewRequest = useCallback(async (bookId, note = null) => {
+  const createNewRequest = useCallback(async (bookId, note = null, desiredDate = null, deliveryDate = null) => {
     try {
       setError('');
-      const result = await createLoanRequest({ bookId, note });
+      const payload = { bookId, note };
+      if (desiredDate) payload.desired_date = desiredDate;
+      if (deliveryDate) payload.delivery_date = deliveryDate;
+      const result = await createLoanRequest(payload);
       setMyRequests(prev => [result.request, ...prev]);
       return result;
     } catch (createError) {
@@ -132,6 +135,7 @@ export function LoanRequestProvider({ children }) {
     try {
       setError('');
       const result = await cancelLoanRequest(requestId);
+      console.log('cancelRequest: API result', result);
       setMyRequests(prev => prev.map(r => r.id === requestId ? { ...r, status: 'cancelled' } : r));
       return result;
     } catch (cancelError) {

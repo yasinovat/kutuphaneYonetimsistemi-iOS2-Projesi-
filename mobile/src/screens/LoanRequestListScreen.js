@@ -1,6 +1,8 @@
 import React, { useContext, useEffect } from 'react';
+import { Platform } from 'react-native';
 import {
   ActivityIndicator,
+  Alert,
   FlatList,
   Pressable,
   RefreshControl,
@@ -30,13 +32,25 @@ const getStatusLabel = (status) => {
   return labels[status] || status;
 };
 
-function RequestCard({ request, onPress }) {
+function RequestCard({ request, onPress, onCancel }) {
+  const handleSmallCancel = () => {
+    try {
+      // quick local trace for debugging
+      console.log('RequestCard: smallCancel pressed for', request.id);
+      // give immediate visual feedback on web/native
+      // eslint-disable-next-line no-undef
+      if (typeof alert === 'function') alert('İptal düğmesine basıldı — işlemi onaylayınız.');
+    } catch (e) {}
+    if (onCancel) onCancel(request);
+  };
   return (
-    <Pressable style={styles.card} onPress={onPress}>
+    <View style={styles.card}>
       <View style={styles.cardHeader}>
-        <Text style={styles.bookTitle} numberOfLines={1}>
-          {request.book_title || 'Bilinmiyor'}
-        </Text>
+        <Pressable onPress={onPress} style={{ flex: 1 }}>
+          <Text style={styles.bookTitle} numberOfLines={1}>
+            {request.book_title || 'Bilinmiyor'}
+          </Text>
+        </Pressable>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(request.status) }]}>
           <Text style={styles.statusText}>{getStatusLabel(request.status)}</Text>
         </View>
@@ -63,12 +77,34 @@ function RequestCard({ request, onPress }) {
           <Text style={styles.rejectionText}>{request.rejection_reason}</Text>
         </View>
       )}
-    </Pressable>
+      {request.desired_date && (
+        <Text style={styles.desiredDateText}>
+          İstenen Tarih: {new Date(request.desired_date).toLocaleDateString('tr-TR')}
+        </Text>
+      )}
+      {request.delivery_date && (
+        <Text style={styles.desiredDateText}>
+          Teslim Tarihi: {new Date(request.delivery_date).toLocaleDateString('tr-TR')}
+        </Text>
+      )}
+
+      {request.status === 'pending' && (
+        <Pressable
+          style={styles.smallCancel}
+          onPressIn={() => console.log('smallCancel onPressIn', request.id)}
+          onPressOut={() => console.log('smallCancel onPressOut', request.id)}
+          onPress={handleSmallCancel}
+          pointerEvents="auto"
+        >
+          <Text style={styles.smallCancelText}>İptal Et</Text>
+        </Pressable>
+      )}
+    </View>
   );
 }
 
 export default function LoanRequestListScreen({ navigation }) {
-  const { myRequests, isLoading, isRefreshing, error, loadMyRequests } = useContext(LoanRequestContext);
+  const { myRequests, isLoading, isRefreshing, error, loadMyRequests, cancelRequest } = useContext(LoanRequestContext);
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -84,6 +120,45 @@ export default function LoanRequestListScreen({ navigation }) {
 
   const handleRequestPress = (request) => {
     navigation.navigate('LoanRequestDetail', { requestId: request.id });
+  };
+
+  const handleCancelPress = (request) => {
+    console.log('handleCancelPress called for', request && request.id);
+    if (Platform.OS === 'web') {
+      const ok = window.confirm('İsteği iptal etmek istiyor musunuz? Bu işlem geri alınamaz.');
+      if (!ok) return;
+      (async () => {
+        try {
+          const res = await cancelRequest(request.id);
+          console.log('cancelRequest: API result', res);
+          await loadMyRequests({ showRefreshing: false });
+        } catch (e) {
+          // use alert on web
+          // eslint-disable-next-line no-undef
+          if (typeof alert === 'function') alert(e.message || 'İstek iptal edilemedi.');
+        }
+      })();
+      return;
+    }
+
+    Alert.alert(
+      'İsteği İptal Et',
+      'Bu işlem geri alınamaz. Devam etmek istiyor musunuz?',
+      [
+        { text: 'Hayır', style: 'cancel' },
+        {
+          text: 'Evet',
+          onPress: async () => {
+            try {
+              await cancelRequest(request.id);
+              await loadMyRequests({ showRefreshing: false });
+            } catch (e) {
+              Alert.alert('Hata', e.message || 'İstek iptal edilemedi.');
+            }
+          }
+        }
+      ]
+    );
   };
 
   const renderEmpty = () => (
@@ -124,7 +199,7 @@ export default function LoanRequestListScreen({ navigation }) {
         data={myRequests}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <RequestCard request={item} onPress={() => handleRequestPress(item)} />
+          <RequestCard request={item} onPress={() => handleRequestPress(item)} onCancel={handleCancelPress} />
         )}
         refreshControl={
           <RefreshControl
@@ -250,6 +325,27 @@ const styles = StyleSheet.create({
   rejectionText: {
     fontSize: 12,
     color: '#7f1d1d'
+  },
+  desiredDateText: {
+    fontSize: 12,
+    color: '#374151',
+    marginTop: 8
+  },
+  smallCancel: {
+    marginTop: 10,
+    alignSelf: 'flex-end',
+    backgroundColor: '#ef4444',
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6
+    ,
+    zIndex: 10,
+    elevation: 10
+  },
+  smallCancelText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600'
   },
   emptyContainer: {
     flex: 1,

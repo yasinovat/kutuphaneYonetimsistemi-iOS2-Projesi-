@@ -23,8 +23,7 @@ async function getAllLoanRequests(filters = {}) {
 
   const query = `
     SELECT 
-      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.status,
-      lr.note, lr.approved_by, lr.approval_date, lr.rejection_reason,
+      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.desired_date, lr.delivery_date, lr.status,
       lr.created_at,
       b.title AS book_title, b.author AS book_author,
       m.full_name AS member_name, m.email AS member_email,
@@ -44,7 +43,7 @@ async function getAllLoanRequests(filters = {}) {
 async function getLoanRequestById(id) {
   const query = `
     SELECT 
-      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.status,
+      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.desired_date, lr.delivery_date, lr.status,
       lr.note, lr.approved_by, lr.approval_date, lr.rejection_reason,
       lr.created_at,
       b.title AS book_title, b.author AS book_author, b.available_copies,
@@ -64,7 +63,7 @@ async function getLoanRequestById(id) {
 async function getLoanRequestsByMemberId(memberId) {
   const query = `
     SELECT 
-      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.status,
+      lr.id, lr.book_id, lr.member_id, lr.request_date, lr.desired_date, lr.delivery_date, lr.status,
       lr.note, lr.approved_by, lr.approval_date, lr.rejection_reason,
       lr.created_at,
       b.title AS book_title, b.author AS book_author,
@@ -80,7 +79,7 @@ async function getLoanRequestsByMemberId(memberId) {
   return result.rows;
 }
 
-async function createLoanRequest(bookId, memberId, note = null) {
+async function createLoanRequest(bookId, memberId, note = null, desiredDate = null, deliveryDate = null) {
   // Check if book exists and has copies
   const bookCheck = await pool.query(
     'SELECT id, title, available_copies FROM books WHERE id = $1',
@@ -116,12 +115,12 @@ async function createLoanRequest(bookId, memberId, note = null) {
   }
 
   const query = `
-    INSERT INTO loan_requests (book_id, member_id, note, request_date)
-    VALUES ($1, $2, $3, CURRENT_DATE)
-    RETURNING id, book_id, member_id, request_date, status, note, created_at
+    INSERT INTO loan_requests (book_id, member_id, note, request_date, desired_date, delivery_date)
+    VALUES ($1, $2, $3, CURRENT_DATE, $4, $5)
+    RETURNING id, book_id, member_id, request_date, desired_date, delivery_date, status, note, created_at
   `;
 
-  const result = await pool.query(query, [bookId, memberId, note]);
+  const result = await pool.query(query, [bookId, memberId, note, desiredDate, deliveryDate]);
   return result.rows[0];
 }
 

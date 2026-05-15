@@ -41,12 +41,30 @@ async function findCoverForBook(book) {
   if (isbn) {
     const byIsbn = await tryQuery(`isbn:${isbn}`);
     if (byIsbn) return byIsbn;
+    // try Open Library cover
+    try {
+      const olUrl = `https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`;
+      // quick head request
+      const ok = await new Promise((resolve) => {
+        https
+          .get(olUrl, (res) => {
+            resolve(res.statusCode === 200);
+          })
+          .on('error', () => resolve(false));
+      });
+      if (ok) return olUrl;
+    } catch (e) {
+      // ignore
+    }
   }
 
   const titleAuthor = [book.title, book.author].filter(Boolean).join(' ');
   if (titleAuthor) {
     const byTitle = await tryQuery(`intitle:${book.title}+inauthor:${book.author}`);
     if (byTitle) return byTitle;
+    // fallback simple query
+    const bySimple = await tryQuery(titleAuthor);
+    if (bySimple) return bySimple;
   }
 
   return null;

@@ -135,6 +135,24 @@ export default function LoanRequestDetailScreen({ route, navigation }) {
               {formatDate(request.request_date)}
             </Text>
           </View>
+          {request.desired_date && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Talep Edilen Tarih</Text>
+                <Text style={styles.infoValue}>{new Date(request.desired_date).toLocaleDateString('tr-TR')}</Text>
+              </View>
+            </>
+          )}
+          {request.delivery_date && (
+            <>
+              <View style={styles.divider} />
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Teslim Tarihi</Text>
+                <Text style={styles.infoValue}>{new Date(request.delivery_date).toLocaleDateString('tr-TR')}</Text>
+              </View>
+            </>
+          )}
           {request.note && (
             <>
               <View style={styles.divider} />

@@ -64,7 +64,7 @@ async function getLoanRequestDetailHandler(req, res) {
 
 async function createLoanRequestHandler(req, res) {
   try {
-    const { bookId, note } = req.body;
+    const { bookId, note, desired_date, delivery_date } = req.body;
 
     if (!bookId) {
       return res.status(400).json({ error: 'bookId zorunludur.' });
@@ -78,7 +78,7 @@ async function createLoanRequestHandler(req, res) {
       return res.status(400).json({ error: 'Hesabınız bir üye ile bağlı değil.' });
     }
 
-    const newRequest = await createLoanRequest(bookId, req.user.member_id, note || null);
+    const newRequest = await createLoanRequest(bookId, req.user.member_id, note || null, desired_date || null, delivery_date || null);
 
     return res.status(201).json({
       message: 'Ödünç alma isteği oluşturuldu.',

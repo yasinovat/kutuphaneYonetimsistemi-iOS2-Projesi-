@@ -47,6 +47,12 @@ function RequestCard({ request, onApprove, onReject, isProcessing }) {
             "{request.note}"
           </Text>
         )}
+        {request.desired_date && (
+          <Text style={styles.desiredDateText}>Talep Edilen Tarih: {new Date(request.desired_date).toLocaleDateString('tr-TR')}</Text>
+        )}
+        {request.delivery_date && (
+          <Text style={styles.desiredDateText}>Teslim Tarihi: {new Date(request.delivery_date).toLocaleDateString('tr-TR')}</Text>
+        )}
       </View>
 
       {!showRejectReason ? (
@@ -331,6 +337,11 @@ const styles = StyleSheet.create({
     paddingTop: 8,
     borderTopWidth: 1,
     borderTopColor: '#f3f4f6'
+  },
+  desiredDateText: {
+    fontSize: 12,
+    color: '#374151',
+    marginTop: 8
   },
   actionButtonsContainer: {
     flexDirection: 'row',

@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS loan_requests (
   book_id INT NOT NULL REFERENCES books(id) ON DELETE RESTRICT,
   member_id INT NOT NULL REFERENCES members(id) ON DELETE RESTRICT,
   request_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  desired_date DATE,
+  delivery_date DATE,
   status VARCHAR(30) NOT NULL DEFAULT 'pending',
   note TEXT,
   approved_by INT REFERENCES users(id) ON DELETE SET NULL,

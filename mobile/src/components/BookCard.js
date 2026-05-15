@@ -50,6 +50,15 @@ async function fetchCoverForQuery(query) {
   }
 }
 
+async function checkImageUrl(url) {
+  try {
+    const res = await fetch(url, { method: 'HEAD' });
+    return res.ok;
+  } catch (e) {
+    return false;
+  }
+}
+
 async function fetchCoverUrl(book) {
   if (!book) return null;
 
@@ -58,12 +67,32 @@ async function fetchCoverUrl(book) {
     const isbnQuery = buildGoogleBooksQuery({ isbn: book.isbn });
     const byIsbn = await fetchCoverForQuery(isbnQuery);
     if (byIsbn) return byIsbn;
+    // try Open Library covers by ISBN
+    try {
+      const normalizedIsbn = String(book.isbn).replace(/[^0-9Xx]/g, '');
+      if (normalizedIsbn) {
+        const olUrl = `https://covers.openlibrary.org/b/isbn/${normalizedIsbn}-L.jpg`;
+        const ok = await checkImageUrl(olUrl);
+        if (ok) return olUrl;
+      }
+    } catch (e) {}
   }
 
   const titleAuthorQuery = buildGoogleBooksQuery({ title: book.title, author: book.author });
   if (titleAuthorQuery) {
     const byTitle = await fetchCoverForQuery(titleAuthorQuery);
     if (byTitle) return byTitle;
+  }
+
+  // Fallback: try a simple free-text search with title and author (less strict)
+  try {
+    const simple = [book.title, book.author].filter(Boolean).map(s => encodeURIComponent(s)).join('+');
+    if (simple) {
+      const bySimple = await fetchCoverForQuery(simple);
+      if (bySimple) return bySimple;
+    }
+  } catch (e) {
+    // ignore
   }
 
   return null;
