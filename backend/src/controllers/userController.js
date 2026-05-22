@@ -164,10 +164,39 @@ async function removeUser(req, res) {
   }
 }
 
+async function toggleUserStatus(req, res) {
+  try {
+    const userId = Number(req.params.id);
+
+    if (!Number.isInteger(userId)) {
+      return res.status(400).json({ message: 'Gecerli bir kullanici id degeri gonderiniz.' });
+    }
+
+    const existingUser = await getUserById(userId);
+
+    if (!existingUser) {
+      return res.status(404).json({ message: 'Kullanici bulunamadi.' });
+    }
+
+    const updatedUser = await updateUser({
+      id: userId,
+      is_active: !existingUser.is_active
+    });
+
+    return res.status(200).json({
+      message: existingUser.is_active ? 'Kullanici pasif yapildi.' : 'Kullanici aktif yapildi.',
+      user: updatedUser
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Kullanici durumu degistirilirken hata olustu.', error: error.message });
+  }
+}
+
 module.exports = {
   listUsers,
   getUser,
   addUser,
   editUser,
-  removeUser
+  removeUser,
+  toggleUserStatus
 };

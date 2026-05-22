@@ -7,7 +7,13 @@ const loanRequestRoutes = require('./routes/loanRequestRoutes');
 
 const app = express();
 
-app.use(cors());
+// CORS ayarları - emulator erişimi için açık
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 app.get('/health', (req, res) => {

@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash TEXT NOT NULL,
   role VARCHAR(30) NOT NULL DEFAULT 'admin',
   member_id INT REFERENCES members(id) ON DELETE SET NULL,
+  is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
@@ -67,3 +68,4 @@ CREATE INDEX IF NOT EXISTS idx_loans_member_id ON loans(member_id);
 CREATE INDEX IF NOT EXISTS idx_books_title ON books(title);
 CREATE INDEX IF NOT EXISTS idx_books_author ON books(author);
 CREATE INDEX IF NOT EXISTS idx_books_genre ON books(genre);
+CREATE INDEX IF NOT EXISTS idx_users_is_active ON users(is_active);

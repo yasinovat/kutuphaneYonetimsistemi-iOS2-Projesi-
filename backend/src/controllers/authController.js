@@ -83,6 +83,11 @@ async function login(req, res) {
       return res.status(401).json({ message: 'Email veya sifre hatali.' });
     }
 
+      // Eğer kullanıcı pasifse girişe izin verme
+      if (user.is_active === false) {
+        return res.status(403).json({ message: 'Hesabınız yönetici tarafından pasif hale getirildi. Lütfen yönetici ile iletişime geçin.' });
+      }
+
     const isPasswordValid = await bcrypt.compare(password, user.password_hash);
 
     if (!isPasswordValid) {

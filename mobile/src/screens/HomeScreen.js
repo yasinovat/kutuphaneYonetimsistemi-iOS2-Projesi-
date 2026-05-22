@@ -43,7 +43,7 @@ export default function HomeScreen({ navigation }) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
-        <Text style={styles.kicker}>Hafta 5 Dashboard</Text>
+        
         <Text style={styles.title}>Kitap akışı, stok ve filtreler tek merkezde.</Text>
         {user && <Text style={styles.subtitle}>{user.full_name || user.email}</Text>}
 
@@ -112,6 +112,18 @@ export default function HomeScreen({ navigation }) {
             </Pressable>
           )}
         </View>
+
+        {user?.role === 'admin' && (
+          <View style={styles.quickActionsRow}>
+            <Pressable
+              style={styles.quickActionButton}
+              onPress={() => navigation.navigate('AdminUserList')}
+            >
+              <Text style={styles.quickActionTitle}>Kullanıcı Yönetimi</Text>
+              <Text style={styles.quickActionText}>Kullanıcıları yönet</Text>
+            </Pressable>
+          </View>
+        )}
       </View>
 
       <View style={styles.sectionBox}>

@@ -1,10 +1,19 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const DEFAULT_API_BASE_URL =
-  Platform.OS === 'android' ? 'http://10.0.2.2:5000/api' : 'http://localhost:5000/api';
+let DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
+
+// Hangi platformda olduğumuzu kontrol et
+if (Platform.OS === 'android') {
+  DEFAULT_API_BASE_URL = 'http://10.0.2.2:5000/api';
+} else if (Platform.OS === 'ios') {
+  DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
+}
 
 const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_BASE_URL;
+
+console.log('API Base URL:', API_BASE_URL); // Debug için
+console.log('Platform:', Platform.OS); // Debug için
 
 function buildQueryString(params = {}) {
   const searchParams = new URLSearchParams();
@@ -193,5 +202,21 @@ export async function rejectLoanRequest(requestId, rejectionReason = null) {
 export async function cancelLoanRequest(requestId) {
   return apiFetch(`/loan-requests/${requestId}/cancel`, {
     method: 'PUT'
+  });
+}
+
+// Admin / User management endpoints
+export async function fetchUsersList() {
+  return apiFetch('/users', { method: 'GET' });
+}
+
+export async function toggleUserStatusApi(userId) {
+  return apiFetch(`/users/${userId}/toggle-status`, { method: 'PUT' });
+}
+
+export async function updateUserApi(userId, userData) {
+  return apiFetch(`/users/${userId}`, {
+    method: 'PUT',
+    body: JSON.stringify(userData)
   });
 }

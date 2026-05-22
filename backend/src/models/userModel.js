@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 async function getAllUsers() {
   const query = `
-    SELECT id, full_name, email, role, created_at
+    SELECT id, full_name, email, role, is_active, created_at
     FROM users
     ORDER BY id ASC
   `;
@@ -13,7 +13,7 @@ async function getAllUsers() {
 
 async function getUserById(id) {
   const query = `
-    SELECT id, full_name, email, role, created_at
+    SELECT id, full_name, email, role, is_active, created_at
     FROM users
     WHERE id = $1
   `;
@@ -24,7 +24,7 @@ async function getUserById(id) {
 
 async function getUserByEmail(email) {
   const query = `
-    SELECT id, full_name, email, password_hash, role, member_id, created_at
+    SELECT id, full_name, email, password_hash, role, member_id, is_active, created_at
     FROM users
     WHERE email = $1
   `;
@@ -35,9 +35,9 @@ async function getUserByEmail(email) {
 
 async function createUser({ full_name, email, password_hash, role }) {
   const query = `
-    INSERT INTO users (full_name, email, password_hash, role)
-    VALUES ($1, $2, $3, $4)
-    RETURNING id, full_name, email, role, created_at
+    INSERT INTO users (full_name, email, password_hash, role, is_active)
+    VALUES ($1, $2, $3, $4, TRUE)
+    RETURNING id, full_name, email, role, is_active, created_at
   `;
 
   const values = [full_name, email, password_hash, role || 'member'];
@@ -45,7 +45,7 @@ async function createUser({ full_name, email, password_hash, role }) {
   return result.rows[0];
 }
 
-async function updateUser({ id, full_name, email, role, password_hash, member_id }) {
+async function updateUser({ id, full_name, email, role, password_hash, member_id, is_active }) {
   const query = `
     UPDATE users
     SET
@@ -53,12 +53,13 @@ async function updateUser({ id, full_name, email, role, password_hash, member_id
       email = COALESCE($3, email),
       role = COALESCE($4, role),
       password_hash = COALESCE($5, password_hash),
-      member_id = COALESCE($6, member_id)
+      member_id = COALESCE($6, member_id),
+      is_active = COALESCE($7, is_active)
     WHERE id = $1
-    RETURNING id, full_name, email, role, member_id, created_at
+    RETURNING id, full_name, email, role, member_id, is_active, created_at
   `;
 
-  const values = [id, full_name, email, role, password_hash, member_id];
+  const values = [id, full_name, email, role, password_hash, member_id, is_active];
   const result = await pool.query(query, values);
   return result.rows[0] || null;
 }
@@ -66,7 +67,7 @@ async function updateUser({ id, full_name, email, role, password_hash, member_id
 async function deleteUser(id) {
   const query = `
     DELETE FROM users
-    WHERE id = $1
+    WHERE id = $1is_active, 
     RETURNING id, full_name, email, role, created_at
   `;
 

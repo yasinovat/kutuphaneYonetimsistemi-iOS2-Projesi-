@@ -8,6 +8,7 @@ import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
 import { BooksProvider } from './src/contexts/BooksContext';
 import { LoanRequestProvider } from './src/contexts/LoanRequestContext';
+import { UserProvider } from './src/contexts/UserContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -18,6 +19,7 @@ import LoanRequestListScreen from './src/screens/LoanRequestListScreen';
 import LoanRequestDetailScreen from './src/screens/LoanRequestDetailScreen';
 import LoanRequestCreateScreen from './src/screens/LoanRequestCreateScreen';
 import AdminLoanRequestsScreen from './src/screens/AdminLoanRequestsScreen';
+import AdminUserListScreen from './src/screens/AdminUserListScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -109,11 +111,18 @@ function AppStack() {
 
       {/* Admin Screens */}
       {user?.role === 'admin' && (
-        <Stack.Screen
-          name="AdminLoanRequests"
-          component={AdminLoanRequestsScreen}
-          options={{ title: 'Ödünç Alma İstekleri' }}
-        />
+        <>
+          <Stack.Screen
+            name="AdminLoanRequests"
+            component={AdminLoanRequestsScreen}
+            options={{ title: 'Ödünç Alma İstekleri' }}
+          />
+          <Stack.Screen
+            name="AdminUserList"
+            component={AdminUserListScreen}
+            options={{ title: 'Kullanıcı Yönetimi' }}
+          />
+        </>
       )}
     </Stack.Navigator>
   );
@@ -144,7 +153,9 @@ export default function App() {
     <AuthProvider>
       <BooksProvider>
         <LoanRequestProvider>
-          <RootNavigator />
+          <UserProvider>
+            <RootNavigator />
+          </UserProvider>
         </LoanRequestProvider>
       </BooksProvider>
     </AuthProvider>
