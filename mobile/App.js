@@ -9,6 +9,7 @@ import { AuthProvider, AuthContext } from './src/contexts/AuthContext';
 import { BooksProvider } from './src/contexts/BooksContext';
 import { LoanRequestProvider } from './src/contexts/LoanRequestContext';
 import { UserProvider } from './src/contexts/UserContext';
+import { LoansProvider } from './src/contexts/LoansContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -20,6 +21,9 @@ import LoanRequestDetailScreen from './src/screens/LoanRequestDetailScreen';
 import LoanRequestCreateScreen from './src/screens/LoanRequestCreateScreen';
 import AdminLoanRequestsScreen from './src/screens/AdminLoanRequestsScreen';
 import AdminUserListScreen from './src/screens/AdminUserListScreen';
+import ProfileScreen from './src/screens/ProfileScreen';
+import ActiveLoansScreen from './src/screens/ActiveLoansScreen';
+import LoanDetailScreen from './src/screens/LoanDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -109,6 +113,25 @@ function AppStack() {
         options={{ title: 'Yeni Ödünç Alma İsteği' }}
       />
 
+      {/* Loans Screens */}
+      <Stack.Screen
+        name="ActiveLoans"
+        component={ActiveLoansScreen}
+        options={{ title: 'Aktif Ödünçlerim' }}
+      />
+      <Stack.Screen
+        name="LoanDetail"
+        component={LoanDetailScreen}
+        options={{ title: 'Ödünç Detayı' }}
+      />
+
+      {/* Profile Screen */}
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profilim' }}
+      />
+
       {/* Admin Screens */}
       {user?.role === 'admin' && (
         <>
@@ -153,9 +176,11 @@ export default function App() {
     <AuthProvider>
       <BooksProvider>
         <LoanRequestProvider>
-          <UserProvider>
-            <RootNavigator />
-          </UserProvider>
+          <LoansProvider>
+            <UserProvider>
+              <RootNavigator />
+            </UserProvider>
+          </LoansProvider>
         </LoanRequestProvider>
       </BooksProvider>
     </AuthProvider>

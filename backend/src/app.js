@@ -4,6 +4,7 @@ const bookRoutes = require('./routes/bookRoutes');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/userRoutes');
 const loanRequestRoutes = require('./routes/loanRequestRoutes');
+const loansRoutes = require('./routes/loansRoutes');
 
 const app = express();
 
@@ -24,5 +25,6 @@ app.use('/api', bookRoutes);
 app.use('/api', authRoutes);
 app.use('/api', userRoutes);
 app.use('/api/loan-requests', loanRequestRoutes);
+app.use('/api/loans', loansRoutes);
 
 module.exports = app;

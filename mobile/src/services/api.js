@@ -205,6 +205,50 @@ export async function cancelLoanRequest(requestId) {
   });
 }
 
+// Loans endpoints
+export async function fetchActiveLoans() {
+  return apiFetch('/loans/active', {
+    method: 'GET'
+  });
+}
+
+export async function fetchAllLoans() {
+  return apiFetch('/loans', {
+    method: 'GET'
+  });
+}
+
+export async function fetchLoanDetail(loanId) {
+  return apiFetch(`/loans/${loanId}`, {
+    method: 'GET'
+  });
+}
+
+export async function returnLoan(loanId) {
+  return apiFetch(`/loans/${loanId}/return`, {
+    method: 'PUT',
+    body: JSON.stringify({})
+  });
+}
+
+export async function fetchOverdueCount() {
+  return apiFetch('/loans/overdue/count', {
+    method: 'GET'
+  });
+}
+
+// Change password endpoint
+export async function changePassword(currentPassword, newPassword, confirmPassword) {
+  return apiFetch('/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+      confirm_password: confirmPassword
+    })
+  });
+}
+
 // Admin / User management endpoints
 export async function fetchUsersList() {
   return apiFetch('/users', { method: 'GET' });

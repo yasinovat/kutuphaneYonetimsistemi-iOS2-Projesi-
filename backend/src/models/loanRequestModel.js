@@ -132,7 +132,7 @@ async function approveLoanRequest(loanRequestId, userId) {
 
     // Get loan request details
     const loanReqQuery = `
-      SELECT lr.id, lr.book_id, lr.member_id, lr.status
+      SELECT lr.id, lr.book_id, lr.member_id, lr.status, lr.desired_date, lr.delivery_date
        FROM loan_requests lr
        WHERE lr.id = $1
     `;
@@ -172,16 +172,22 @@ async function approveLoanRequest(loanRequestId, userId) {
     `;
     const updatedReq = await client.query(updateQuery, [userId, loanRequestId]);
 
-    // Create loan record with 14-day due date
+    // Create loan record with due date from request delivery_date or default 14 days
+    const dueDate = loanReq.rows[0].delivery_date || null;
+    
     const loanQuery = `
       INSERT INTO loans (book_id, member_id, loan_date, due_date, status)
-      VALUES ($1, $2, CURRENT_DATE, CURRENT_DATE + INTERVAL '14 days', 'borrowed')
+      VALUES ($1, $2, CURRENT_DATE, COALESCE($3, CURRENT_DATE + INTERVAL '14 days'), 'borrowed')
       RETURNING id
     `;
-    const newLoan = await client.query(loanQuery, [
+    
+    const loanParams = [
       loanReq.rows[0].book_id,
-      loanReq.rows[0].member_id
-    ]);
+      loanReq.rows[0].member_id,
+      dueDate
+    ];
+    
+    const newLoan = await client.query(loanQuery, loanParams);
 
     // Decrease available copies
     const updateCopiesQuery = `

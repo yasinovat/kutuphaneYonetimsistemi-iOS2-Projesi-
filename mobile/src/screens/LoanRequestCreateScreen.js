@@ -157,7 +157,7 @@ export default function LoanRequestCreateScreen({ navigation }) {
 
           {/* Tarih Seçici */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Talep Edilen Tarih (İsteğe bağlı)</Text>
+            <Text style={styles.sectionTitle}>Kitabı Almak İstediğim Tarih (İsteğe bağlı)</Text>
             <Pressable
               style={[styles.selectButton, !desiredDate && styles.selectButtonEmpty]}
               onPress={openDesiredDatePicker}
@@ -166,13 +166,13 @@ export default function LoanRequestCreateScreen({ navigation }) {
                 {desiredDate ? new Date(desiredDate).toLocaleDateString('tr-TR') : 'Tarih seçmek için tıklayın...'}
               </Text>
             </Pressable>
-            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Teslim Tarihi (Seçiniz)</Text>
+            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Geri Vereceğim Tarih (Zorunlu)</Text>
             <Pressable
               style={[styles.selectButton, !deliveryDate && styles.selectButtonEmpty]}
               onPress={openDeliveryDatePicker}
             >
               <Text style={deliveryDate ? styles.selectedDateText : styles.selectButtonPlaceholder}>
-                {deliveryDate ? new Date(deliveryDate).toLocaleDateString('tr-TR') : 'Teslim tarihi seçmek için tıklayın...'}
+                {deliveryDate ? new Date(deliveryDate).toLocaleDateString('tr-TR') : 'Geri vereceğim tarihi seçin...'}
               </Text>
             </Pressable>
             {showDatePicker && (

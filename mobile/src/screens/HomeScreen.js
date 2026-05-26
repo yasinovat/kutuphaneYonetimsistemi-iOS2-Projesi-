@@ -102,6 +102,23 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.quickActionTitle}>İsteklerim</Text>
             <Text style={styles.quickActionText}>Ödünç isteklerini göster</Text>
           </Pressable>
+          <Pressable
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate('ActiveLoans')}
+          >
+            <Text style={styles.quickActionTitle}>Aktif Ödünçler</Text>
+            <Text style={styles.quickActionText}>Ödünç aldığım kitaplar</Text>
+          </Pressable>
+        </View>
+
+        <View style={styles.quickActionsRow}>
+          <Pressable
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.quickActionTitle}>Profilim</Text>
+            <Text style={styles.quickActionText}>Hesap ve şifre ayarları</Text>
+          </Pressable>
           {user?.role === 'admin' && (
             <Pressable
               style={styles.quickActionButton}

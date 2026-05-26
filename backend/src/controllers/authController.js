@@ -113,7 +113,58 @@ async function login(req, res) {
   }
 }
 
+async function changePassword(req, res) {
+  try {
+    const { current_password, new_password, confirm_password } = req.body;
+
+    if (!current_password || !new_password || !confirm_password) {
+      return res.status(400).json({ message: 'Tüm alanlar zorunludur.' });
+    }
+
+    if (new_password !== confirm_password) {
+      return res.status(400).json({ message: 'Yeni şifreler eşleşmiyor.' });
+    }
+
+    if (new_password.length < 6) {
+      return res.status(400).json({ message: 'Şifre en az 6 karakter olmalıdır.' });
+    }
+
+    const user = await getUserByEmail(req.user.email);
+
+    if (!user) {
+      return res.status(404).json({ message: 'Kullanıcı bulunamadı.' });
+    }
+
+    const isPasswordValid = await bcrypt.compare(current_password, user.password_hash);
+
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: 'Mevcut şifre yanlış.' });
+    }
+
+    const new_password_hash = await bcrypt.hash(new_password, SALT_ROUNDS);
+
+    const { updateUser } = require('../models/userModel');
+    const updatedUser = await updateUser({
+      id: user.id,
+      password_hash: new_password_hash
+    });
+
+    return res.status(200).json({
+      message: 'Şifre başarıyla değiştirildi.',
+      user: {
+        id: updatedUser.id,
+        full_name: updatedUser.full_name,
+        email: updatedUser.email,
+        role: updatedUser.role
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: 'Şifre değiştirilirken hata oluştu.', error: error.message });
+  }
+}
+
 module.exports = {
   register,
-  login
+  login,
+  changePassword
 };
