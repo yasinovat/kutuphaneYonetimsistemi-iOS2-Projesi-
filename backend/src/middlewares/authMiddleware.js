@@ -25,7 +25,13 @@ async function verifyToken(req, res, next) {
       return res.status(401).json({ message: 'Yetkilendirme tokeni bulunamadi.' });
     }
 
-    const decoded = jwt.verify(token, JWT_SECRET);
+    let decoded;
+    try {
+      decoded = jwt.verify(token, JWT_SECRET);
+    } catch (jwtErr) {
+      console.error('verifyToken - jwt verify error:', jwtErr && jwtErr.message, 'token=', token ? token.substring(0, 20) + '...' : token);
+      throw jwtErr;
+    }
 
     // Fetch user with member_id from database
     const query = 'SELECT id, email, role, member_id FROM users WHERE id = $1';

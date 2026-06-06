@@ -6,6 +6,7 @@ const {
   updateBook,
   deleteBook
 } = require('../models/bookModel');
+const { getMostBorrowedBooks } = require('../models/loansModel');
 
 function parseBoolean(value) {
   if (typeof value !== 'string') {
@@ -264,10 +265,25 @@ async function removeBook(req, res) {
   }
 }
 
+// Get most borrowed books
+async function getMostBorrowedHandler(req, res) {
+  try {
+    const limit = Number(req.query.limit) || 10;
+    const rows = await getMostBorrowedBooks(limit);
+    return res.status(200).json(rows);
+  } catch (error) {
+    return res.status(500).json({ message: 'İstatistik alınırken hata olustu.', error: error.message });
+  }
+}
+
 module.exports = {
   listBooks,
   getBook,
   addBook,
   editBook,
   removeBook
+  , getMostBorrowedHandler
 };
+
+
+

@@ -4,13 +4,15 @@ const {
 	getBook,
 	addBook,
 	editBook,
-	removeBook
+	removeBook,
+	getMostBorrowedHandler
 } = require('../controllers/bookController');
 const { verifyToken, requireAdmin } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
 router.get('/books', verifyToken, listBooks);
+router.get('/books/stats/most-borrowed', verifyToken, getMostBorrowedHandler);
 router.get('/books/:id', verifyToken, getBook);
 router.post('/books', verifyToken, requireAdmin, addBook);
 router.put('/books/:id', verifyToken, requireAdmin, editBook);

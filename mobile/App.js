@@ -10,6 +10,7 @@ import { BooksProvider } from './src/contexts/BooksContext';
 import { LoanRequestProvider } from './src/contexts/LoanRequestContext';
 import { UserProvider } from './src/contexts/UserContext';
 import { LoansProvider } from './src/contexts/LoansContext';
+import ThemeProvider, { ThemeContext } from './src/contexts/ThemeContext';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import HomeScreen from './src/screens/HomeScreen';
@@ -24,17 +25,20 @@ import AdminUserListScreen from './src/screens/AdminUserListScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import ActiveLoansScreen from './src/screens/ActiveLoansScreen';
 import LoanDetailScreen from './src/screens/LoanDetailScreen';
+import StatisticsScreen from './src/screens/StatisticsScreen';
 
 const Stack = createNativeStackNavigator();
 
 // Auth stack (Login / Register)
 function AuthStack() {
+  const { colors } = useContext(ThemeContext);
+
   return (
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
         animationEnabled: true,
-        cardStyle: { backgroundColor: '#f4f7f5' }
+        cardStyle: { backgroundColor: colors.background }
       }}
     >
       <Stack.Screen
@@ -54,15 +58,18 @@ function AuthStack() {
 // App stack (Home / BookList) - Protected routes(token varsa gösterilir)
 function AppStack() {
   const { signOut, user } = useContext(AuthContext);
+  const { colors } = useContext(ThemeContext);
 
   return (
     <Stack.Navigator
       initialRouteName="Home"
       screenOptions={{
-        headerStyle: { backgroundColor: '#0b3d2e' },
-        headerTintColor: '#ffffff',
-        headerTitleStyle: { fontWeight: 'bold' },
-        contentStyle: { backgroundColor: '#f4f7f5' }
+      headerStyle: { backgroundColor: colors.primary },
+      headerTintColor: colors.textPrimary,
+      headerTitleStyle: { fontWeight: 'bold' },
+      contentStyle: { backgroundColor: colors.background },
+      headerBackVisible: true,
+      headerBackTitleVisible: false
       }}
     >
       <Stack.Screen
@@ -132,6 +139,12 @@ function AppStack() {
         options={{ title: 'Profilim' }}
       />
 
+      <Stack.Screen
+        name="Statistics"
+        component={StatisticsScreen}
+        options={{ title: 'İstatistikler' }}
+      />
+
       {/* Admin Screens */}
       {user?.role === 'admin' && (
         <>
@@ -154,6 +167,7 @@ function AppStack() {
 // Root navigator - Auth state'e göre uygun stack'i göster
 function RootNavigator() {
   const { isLoading, userToken } = useContext(AuthContext);
+  const { isDark } = useContext(ThemeContext);
 
   if (isLoading) {
     return (
@@ -165,7 +179,7 @@ function RootNavigator() {
 
   return (
     <NavigationContainer>
-      <StatusBar style="light" />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       {userToken ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );
@@ -173,17 +187,19 @@ function RootNavigator() {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <BooksProvider>
-        <LoanRequestProvider>
-          <LoansProvider>
-            <UserProvider>
-              <RootNavigator />
-            </UserProvider>
-          </LoansProvider>
-        </LoanRequestProvider>
-      </BooksProvider>
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <BooksProvider>
+          <LoanRequestProvider>
+            <LoansProvider>
+              <UserProvider>
+                <RootNavigator />
+              </UserProvider>
+            </LoansProvider>
+          </LoanRequestProvider>
+        </BooksProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

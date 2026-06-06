@@ -152,6 +152,26 @@ async function getOverdueLoansStats() {
   return result.rows;
 }
 
+// Get most borrowed books overall
+async function getMostBorrowedBooks(limit = 10) {
+  const query = `
+    SELECT
+      b.id,
+      b.title,
+      b.author,
+      b.cover_url,
+      COUNT(*)::INT AS borrow_count
+    FROM loans l
+    JOIN books b ON l.book_id = b.id
+    GROUP BY b.id, b.title, b.author, b.cover_url
+    ORDER BY borrow_count DESC
+    LIMIT $1
+  `;
+
+  const result = await pool.query(query, [limit]);
+  return result.rows;
+}
+
 module.exports = {
   getActiveLoansByMemberId,
   getAllLoansByMemberId,
@@ -159,4 +179,6 @@ module.exports = {
   returnBook,
   getOverdueLoansCount,
   getOverdueLoansStats
+  , getMostBorrowedBooks
 };
+

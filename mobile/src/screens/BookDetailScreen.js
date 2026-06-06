@@ -4,6 +4,7 @@ import { ActivityIndicator, Alert, Image, Platform, Pressable, ScrollView, Style
 import { AuthContext } from '../contexts/AuthContext';
 import { BooksContext } from '../contexts/BooksContext';
 import { deleteBook, fetchBookById } from '../services/api';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function BookDetailScreen({ route, navigation }) {
   const { user } = useContext(AuthContext);
@@ -100,6 +101,7 @@ export default function BookDetailScreen({ route, navigation }) {
   }
 
   const isAdmin = user?.role === 'admin';
+  const { colors } = useContext(ThemeContext);
 
   const initials = book.title
     ?.split(' ')
@@ -109,28 +111,33 @@ export default function BookDetailScreen({ route, navigation }) {
     .join('') || 'KB';
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: colors.background }] }>
+      <View style={{ marginBottom: 12 }}>
+        <Pressable onPress={() => navigation.goBack()} style={{ padding: 8, marginLeft: 6 }}>
+          <Text style={{ color: colors.primary, fontWeight: '800' }}>← Geri</Text>
+        </Pressable>
+      </View>
       <View style={styles.heroCard}>
         <View style={styles.cover}>
           {book.coverUrl ? (
             <Image source={{ uri: book.coverUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
           ) : (
-            <Text style={styles.coverText}>{initials}</Text>
+            <Text style={[styles.coverText, { color: colors.card }]}>{initials}</Text>
           )}
         </View>
 
         <View style={styles.heroContent}>
-          <Text style={styles.title}>{book.title}</Text>
-          <Text style={styles.meta}>{book.author}</Text>
-          <Text style={styles.metaSecondary}>{book.genre || 'Genel'}</Text>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>{book.title}</Text>
+          <Text style={[styles.meta, { color: colors.textSecondary }]}>{book.author}</Text>
+          <Text style={[styles.metaSecondary, { color: colors.textSecondary }]}>{book.genre || 'Genel'}</Text>
           <Text style={[styles.status, book.available_copies > 0 ? styles.inStock : styles.outOfStock]}>
             {book.available_copies > 0 ? 'Stokta' : 'Tükendi'}
           </Text>
         </View>
       </View>
 
-      <View style={styles.infoCard}>
-        <Text style={styles.sectionTitle}>Kitap Bilgileri</Text>
+      <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Kitap Bilgileri</Text>
         <View style={styles.infoRow}><Text style={styles.infoKey}>ISBN</Text><Text style={styles.infoValue}>{book.isbn}</Text></View>
         <View style={styles.infoRow}><Text style={styles.infoKey}>Yayın Yılı</Text><Text style={styles.infoValue}>{book.published_year || '-'}</Text></View>
         <View style={styles.infoRow}><Text style={styles.infoKey}>Toplam Kopya</Text><Text style={styles.infoValue}>{book.total_copies}</Text></View>
@@ -140,7 +147,7 @@ export default function BookDetailScreen({ route, navigation }) {
       {isAdmin && (
         <View style={styles.actions}>
           <Pressable
-            style={styles.primaryButton}
+            style={[styles.primaryButton, { backgroundColor: colors.primary }]}
             onPress={() => navigation.navigate('BookForm', { mode: 'edit', book })}
           >
             <Text style={styles.primaryButtonText}>Düzenle</Text>

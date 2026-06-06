@@ -7,13 +7,16 @@ import {
   Text,
   View,
   Pressable,
-  TextInput
+  TextInput,
+  Switch
 } from 'react-native';
+import { ThemeContext } from '../contexts/ThemeContext';
 import { AuthContext } from '../contexts/AuthContext';
 import { changePassword } from '../services/api';
 
-export default function ProfileScreen({ navigation }) {
+export default function ProfileScreen() {
   const { user, signOut } = useContext(AuthContext);
+  const { isDark, toggleTheme, colors } = useContext(ThemeContext);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -68,7 +71,7 @@ export default function ProfileScreen({ navigation }) {
     try {
       setIsChangingPassword(true);
       await changePassword(currentPassword, newPassword, confirmPassword);
-      
+
       Alert.alert('Başarılı', 'Şifreniz başarıyla değiştirildi.', [
         {
           text: 'Tamam',
@@ -94,9 +97,7 @@ export default function ProfileScreen({ navigation }) {
         { text: 'Hayır', style: 'cancel' },
         {
           text: 'Evet, Çıkış Yap',
-          onPress: () => {
-            signOut();
-          },
+          onPress: () => signOut(),
           style: 'destructive'
         }
       ]
@@ -104,47 +105,52 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* User Info Section */}
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Profil Bilgileri</Text>
-        <View style={styles.infoCard}>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Profil Bilgileri</Text>
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderLeftColor: colors.primary, borderColor: colors.border }]}>
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Ad Soyad</Text>
-            <Text style={styles.infoValue}>{user?.full_name || '-'}</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Ad Soyad</Text>
+            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user?.full_name || '-'}</Text>
+          </View>
+          <View style={styles.divider} />
+          <View style={[styles.infoRow, { alignItems: 'center' }]}>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Karanlık Mod</Text>
+            <View style={styles.themeRow}>
+              <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>{isDark ? 'Açık' : 'Koyu'}</Text>
+              <Switch value={isDark} onValueChange={toggleTheme} />
+            </View>
           </View>
           <View style={styles.divider} />
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Email</Text>
-            <Text style={styles.infoValue}>{user?.email || '-'}</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
+            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user?.email || '-'}</Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Rol</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Rol</Text>
             <Text style={[styles.infoValue, { color: user?.role === 'admin' ? '#ef4444' : '#10b981' }]}>
               {getRoleLabel(user?.role)}
             </Text>
           </View>
           <View style={styles.divider} />
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Kayıt Tarihi</Text>
-            <Text style={styles.infoValue}>{formatDate(user?.created_at)}</Text>
+            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Kayıt Tarihi</Text>
+            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{formatDate(user?.created_at)}</Text>
           </View>
         </View>
       </View>
 
-      {/* Change Password Section */}
       <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Şifre Değiştir</Text>
-        
-        {/* Current Password */}
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Şifre Değiştir</Text>
+
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Mevcut Şifre</Text>
-          <View style={styles.passwordInputContainer}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Mevcut Şifre</Text>
+          <View style={[styles.passwordInputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="Mevcut şifrenizi giriniz"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               secureTextEntry={!showCurrentPassword}
               value={currentPassword}
               onChangeText={setCurrentPassword}
@@ -154,21 +160,18 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => setShowCurrentPassword(!showCurrentPassword)}
               style={styles.eyeButton}
             >
-              <Text style={styles.eyeButtonText}>
-                {showCurrentPassword ? '👁️' : '👁️‍🗨️'}
-              </Text>
+              <Text style={styles.eyeButtonText}>{showCurrentPassword ? '👁️' : '👁️‍🗨️'}</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* New Password */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Yeni Şifre</Text>
-          <View style={styles.passwordInputContainer}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Yeni Şifre</Text>
+          <View style={[styles.passwordInputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="Yeni şifrenizi giriniz"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               secureTextEntry={!showNewPassword}
               value={newPassword}
               onChangeText={setNewPassword}
@@ -178,21 +181,18 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => setShowNewPassword(!showNewPassword)}
               style={styles.eyeButton}
             >
-              <Text style={styles.eyeButtonText}>
-                {showNewPassword ? '👁️' : '👁️‍🗨️'}
-              </Text>
+              <Text style={styles.eyeButtonText}>{showNewPassword ? '👁️' : '👁️‍🗨️'}</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Confirm Password */}
         <View style={styles.formGroup}>
-          <Text style={styles.label}>Şifreyi Onayla</Text>
-          <View style={styles.passwordInputContainer}>
+          <Text style={[styles.label, { color: colors.textPrimary }]}>Şifreyi Onayla</Text>
+          <View style={[styles.passwordInputContainer, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <TextInput
-              style={styles.input}
+              style={[styles.input, { color: colors.textPrimary }]}
               placeholder="Şifrenizi onaylayınız"
-              placeholderTextColor="#999"
+              placeholderTextColor={colors.textSecondary}
               secureTextEntry={!showConfirmPassword}
               value={confirmPassword}
               onChangeText={setConfirmPassword}
@@ -202,16 +202,13 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => setShowConfirmPassword(!showConfirmPassword)}
               style={styles.eyeButton}
             >
-              <Text style={styles.eyeButtonText}>
-                {showConfirmPassword ? '👁️' : '👁️‍🗨️'}
-              </Text>
+              <Text style={styles.eyeButtonText}>{showConfirmPassword ? '👁️' : '👁️‍🗨️'}</Text>
             </Pressable>
           </View>
         </View>
 
-        {/* Change Password Button */}
         <Pressable
-          style={[styles.button, styles.primaryButton, isChangingPassword && styles.buttonDisabled]}
+          style={[styles.button, styles.primaryButton, { backgroundColor: colors.primary }, isChangingPassword && styles.buttonDisabled]}
           onPress={handleChangePassword}
           disabled={isChangingPassword}
         >
@@ -223,7 +220,6 @@ export default function ProfileScreen({ navigation }) {
         </Pressable>
       </View>
 
-      {/* Logout Button */}
       <View style={styles.section}>
         <Pressable
           style={[styles.button, styles.dangerButton]}
@@ -284,6 +280,15 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: 'right'
   },
+  themeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10
+  },
+  themeLabel: {
+    fontSize: 12,
+    fontWeight: '600'
+  },
   divider: {
     height: 1,
     backgroundColor: '#e0e0e0',
@@ -342,3 +347,4 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   }
 });
+    opacity: 0.6

@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState, useContext } from 'react';
 import { Image, Pressable, StyleSheet, Text, View } from 'react-native';
 import { BooksContext } from '../contexts/BooksContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 function getCoverHue(title = '') {
   const seed = title.split('').reduce((value, character) => value + character.charCodeAt(0), 0);
@@ -100,6 +101,7 @@ async function fetchCoverUrl(book) {
 
 export default function BookCard({ book, onPress, compact = false }) {
   const { getCoverForBook, setCoverForBook } = useContext(BooksContext);
+  const { colors } = useContext(ThemeContext);
   const cacheKey = book?.id ?? book?.isbn ?? `${book?.title || ''}-${book?.author || ''}`;
   const [coverUrl, setCoverUrl] = useState(book?.coverUrl || getCoverForBook(cacheKey));
   const initials = useMemo(() => getInitials(book.title), [book.title]);
@@ -141,12 +143,19 @@ export default function BookCard({ book, onPress, compact = false }) {
   }, [book.author, book.isbn, book.title, cacheKey, getCoverForBook, setCoverForBook]);
 
   return (
-    <Pressable style={[styles.card, compact && styles.compactCard]} onPress={onPress}>
+    <Pressable
+      style={[
+        styles.card,
+        compact && styles.compactCard,
+        { backgroundColor: colors.surface, borderColor: colors.border, shadowColor: colors.primary }
+      ]}
+      onPress={onPress}
+    >
       <View style={[styles.cover, { backgroundColor: `hsl(${coverHue}, 45%, 28%)` }]}>
         {coverUrl ? (
           <Image source={{ uri: coverUrl }} style={styles.coverImage} resizeMode="cover" />
         ) : (
-          <Text style={styles.coverText}>{initials}</Text>
+          <Text style={[styles.coverText, { color: colors.card }]}>{initials}</Text>
         )}
         <View style={[styles.stockPill, stockCount > 0 ? styles.stockPillInStock : styles.stockPillOutOfStock]}>
           <Text style={styles.stockPillText}>{stockCount > 0 ? 'Aktif' : 'Pasif'}</Text>
@@ -154,9 +163,9 @@ export default function BookCard({ book, onPress, compact = false }) {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.title} numberOfLines={2}>{book.title}</Text>
-        <Text style={styles.meta} numberOfLines={1}>{book.author}</Text>
-        <Text style={styles.metaSecondary} numberOfLines={1}>{book.genre || 'Genel'}</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={2}>{book.title}</Text>
+        <Text style={[styles.meta, { color: colors.textSecondary }]} numberOfLines={1}>{book.author}</Text>
+        <Text style={[styles.metaSecondary, { color: colors.textSecondary }]} numberOfLines={1}>{book.genre || 'Genel'}</Text>
 
         <View style={styles.footerRow}>
           <Text style={styles.stockText}>{stockLabel}</Text>

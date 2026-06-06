@@ -4,10 +4,12 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import BookCard from '../components/BookCard';
 import { AuthContext } from '../contexts/AuthContext';
 import { BooksContext } from '../contexts/BooksContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function HomeScreen({ navigation }) {
   const { user } = useContext(AuthContext);
   const { books, dashboardStats, isLoading, error, lastSyncedAt, searchBooks, refreshBooks } = useContext(BooksContext);
+  const { colors } = useContext(ThemeContext);
 
   const featuredBooks = books.slice(0, 3);
 
@@ -34,90 +36,89 @@ export default function HomeScreen({ navigation }) {
 
   if (isLoading && books.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
         
-        <Text style={styles.title}>Kitap akışı, stok ve filtreler tek merkezde.</Text>
-        {user && <Text style={styles.subtitle}>{user.full_name || user.email}</Text>}
+        <Text style={[styles.title, { color: colors.card === '#ffffff' ? '#0b3d2e' : colors.textPrimary }]}>Kitap akışı, stok ve filtreler tek merkezde.</Text>
+        {user && <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{user.full_name || user.email}</Text>}
 
         <View style={styles.heroActions}>
-          <Pressable style={styles.primaryButton} onPress={() => navigation.navigate('BookList')}>
-            <Text style={styles.primaryButtonText}>Kitapları Aç</Text>
+          <Pressable style={[styles.primaryButton, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('BookList')}>
+            <Text style={[styles.primaryButtonText, { color: colors.textPrimary }]}>Kitapları Aç</Text>
           </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={refreshBooks}>
-            <Text style={styles.secondaryButtonText}>Yenile</Text>
+          <Pressable style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={refreshBooks}>
+            <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Yenile</Text>
           </Pressable>
         </View>
-
-        <Text style={styles.syncText}>Son senkronizasyon: {formatSyncedAt(lastSyncedAt)}</Text>
+        <Text style={[styles.syncText, { color: colors.textSecondary }]}>Son senkronizasyon: {formatSyncedAt(lastSyncedAt)}</Text>
       </View>
 
       <View style={styles.statsGrid}>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{dashboardStats.totalBooks}</Text>
-          <Text style={styles.statLabel}>Toplam Kitap</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.totalBooks}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Kitap</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{dashboardStats.booksInStock}</Text>
-          <Text style={styles.statLabel}>Stokta Olan</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.booksInStock}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Stokta Olan</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{dashboardStats.outOfStockBooks}</Text>
-          <Text style={styles.statLabel}>Tükenen</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.outOfStockBooks}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tükenen</Text>
         </View>
         <View style={styles.statCard}>
-          <Text style={styles.statValue}>{dashboardStats.uniqueGenres}</Text>
-          <Text style={styles.statLabel}>Tür</Text>
+          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.uniqueGenres}</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tür</Text>
         </View>
       </View>
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <View style={styles.quickActionsBox}>
+      <View style={[styles.quickActionsBox, { backgroundColor: colors.surface, borderColor: colors.border }] }>
         <Text style={styles.sectionTitle}>Hızlı Eylemler</Text>
 
         <View style={styles.quickActionsRow}>
-          <Pressable style={styles.quickActionButton} onPress={() => goToList({ search: '', inStock: true })}>
-            <Text style={styles.quickActionTitle}>Stokta Olanlar</Text>
-            <Text style={styles.quickActionText}>Sadece aktif kitaplar</Text>
+          <Pressable style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => goToList({ search: '', inStock: true })}>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Stokta Olanlar</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Sadece aktif kitaplar</Text>
           </Pressable>
           <Pressable style={styles.quickActionButton} onPress={() => goToList({ search: '' })}>
-            <Text style={styles.quickActionTitle}>Tüm Liste</Text>
-            <Text style={styles.quickActionText}>Filtreleri temizle</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Tüm Liste</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Filtreleri temizle</Text>
           </Pressable>
         </View>
 
         <View style={styles.quickActionsRow}>
           <Pressable
-            style={styles.quickActionButton}
+            style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('LoanRequestList')}
           >
-            <Text style={styles.quickActionTitle}>İsteklerim</Text>
-            <Text style={styles.quickActionText}>Ödünç isteklerini göster</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>İsteklerim</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Ödünç isteklerini göster</Text>
           </Pressable>
           <Pressable
-            style={styles.quickActionButton}
+            style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('ActiveLoans')}
           >
-            <Text style={styles.quickActionTitle}>Aktif Ödünçler</Text>
-            <Text style={styles.quickActionText}>Ödünç aldığım kitaplar</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Aktif Ödünçler</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Ödünç aldığım kitaplar</Text>
           </Pressable>
         </View>
 
         <View style={styles.quickActionsRow}>
           <Pressable
-            style={styles.quickActionButton}
+            style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('Profile')}
           >
-            <Text style={styles.quickActionTitle}>Profilim</Text>
-            <Text style={styles.quickActionText}>Hesap ve şifre ayarları</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Profilim</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Hesap ve şifre ayarları</Text>
           </Pressable>
           {user?.role === 'admin' && (
             <Pressable
@@ -141,6 +142,16 @@ export default function HomeScreen({ navigation }) {
             </Pressable>
           </View>
         )}
+
+        <View style={styles.quickActionsRow}>
+          <Pressable
+            style={styles.quickActionButton}
+            onPress={() => navigation.navigate('Statistics')}
+          >
+            <Text style={styles.quickActionTitle}>İstatistikler</Text>
+            <Text style={styles.quickActionText}>En çok ödünç alınanlar</Text>
+          </Pressable>
+        </View>
       </View>
 
       <View style={styles.sectionBox}>
@@ -155,7 +166,7 @@ export default function HomeScreen({ navigation }) {
             />
           ))
         ) : (
-          <Text style={styles.emptyText}>Gösterilecek kitap yok.</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Gösterilecek kitap yok.</Text>
         )}
       </View>
     </ScrollView>

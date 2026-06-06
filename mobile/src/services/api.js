@@ -176,6 +176,12 @@ export async function fetchLoanRequestStats() {
   });
 }
 
+// Statistics endpoints
+export async function fetchMostBorrowedBooks(limit = 10) {
+  const qs = buildQueryString({ limit });
+  return apiFetch(`/books/stats/most-borrowed${qs}`, { method: 'GET' });
+}
+
 export async function createLoanRequest(loanRequestData) {
   const data = await apiFetch('/loan-requests', {
     method: 'POST',
