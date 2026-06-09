@@ -13,12 +13,14 @@ import {
 } from 'react-native';
 import { createBook, fetchBookById, updateBook } from '../services/api';
 import { BooksContext } from '../contexts/BooksContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 const EMPTY_FORM = {
   title: '',
   author: '',
   genre: '',
   isbn: '',
+  cover_url: '',
   published_year: '',
   total_copies: '1',
   available_copies: '1'
@@ -28,6 +30,7 @@ export default function BookFormScreen({ route, navigation }) {
   const mode = route.params?.mode || 'create';
   const initialBook = route.params?.book || null;
   const { refreshBooks } = useContext(BooksContext);
+  const { colors } = useContext(ThemeContext);
   const [form, setForm] = useState(EMPTY_FORM);
   const [loading, setLoading] = useState(mode === 'edit');
   const [saving, setSaving] = useState(false);
@@ -46,6 +49,7 @@ export default function BookFormScreen({ route, navigation }) {
             author: initialBook.author || '',
             genre: initialBook.genre || '',
             isbn: initialBook.isbn || '',
+            cover_url: initialBook.cover_url || initialBook.coverUrl || '',
             published_year: initialBook.published_year ? String(initialBook.published_year) : '',
             total_copies: String(initialBook.total_copies ?? 1),
             available_copies: String(initialBook.available_copies ?? 1)
@@ -60,6 +64,7 @@ export default function BookFormScreen({ route, navigation }) {
             author: data.author || '',
             genre: data.genre || '',
             isbn: data.isbn || '',
+            cover_url: data.cover_url || data.coverUrl || '',
             published_year: data.published_year ? String(data.published_year) : '',
             total_copies: String(data.total_copies ?? 1),
             available_copies: String(data.available_copies ?? 1)
@@ -81,6 +86,64 @@ export default function BookFormScreen({ route, navigation }) {
 
   const updateField = (key, value) => {
     setForm((current) => ({ ...current, [key]: value }));
+  };
+
+  const findCoverUrl = async ({ isbn, title, author }) => {
+    const normalizedIsbn = String(isbn || '').replace(/[^0-9Xx]/g, '');
+    const queries = [];
+
+    const titleAuthorQuery = [
+      title ? `intitle:${encodeURIComponent(title)}` : '',
+      author ? `inauthor:${encodeURIComponent(author)}` : ''
+    ].filter(Boolean).join('+');
+
+    if (titleAuthorQuery) {
+      queries.push(titleAuthorQuery);
+    }
+
+    const simpleQuery = [title, author].filter(Boolean).map(value => encodeURIComponent(value)).join('+');
+    if (simpleQuery) {
+      queries.push(simpleQuery);
+    }
+
+    if (normalizedIsbn) {
+      queries.push(`isbn:${encodeURIComponent(normalizedIsbn)}`);
+    }
+
+    for (const query of queries) {
+      try {
+        const response = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${query}&maxResults=1`);
+        if (!response.ok) continue;
+
+        const data = await response.json();
+        const imageLinks = data.items?.[0]?.volumeInfo?.imageLinks;
+        const coverUrl = imageLinks?.thumbnail || imageLinks?.smallThumbnail;
+
+        if (coverUrl) {
+          return coverUrl.replace('http://', 'https://');
+        }
+      } catch (error) {
+        // Kapak bulunamazsa kitap kaydı yine devam eder.
+      }
+    }
+
+    try {
+      const openLibraryQuery = [title, author].filter(Boolean).map(value => encodeURIComponent(value)).join('+');
+      if (openLibraryQuery) {
+        const response = await fetch(`https://openlibrary.org/search.json?q=${openLibraryQuery}&limit=1`);
+        if (response.ok) {
+          const data = await response.json();
+          const coverId = data.docs?.[0]?.cover_i;
+          if (coverId) {
+            return `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`;
+          }
+        }
+      }
+    } catch (error) {
+      // Open Library sonucu yoksa manuel kapak veya harfli kapak kullanılır.
+    }
+
+    return null;
   };
 
   const handleSubmit = async () => {
@@ -126,6 +189,12 @@ export default function BookFormScreen({ route, navigation }) {
         available_copies: availableCopies
       };
 
+      const manualCoverUrl = form.cover_url.trim();
+      const coverUrl = manualCoverUrl || await findCoverUrl(payload);
+      if (coverUrl) {
+        payload.cover_url = coverUrl;
+      }
+
       if (mode === 'edit') {
         await updateBook(initialBook?.id || route.params?.bookId, payload);
       } else {
@@ -146,8 +215,8 @@ export default function BookFormScreen({ route, navigation }) {
 
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -155,20 +224,21 @@ export default function BookFormScreen({ route, navigation }) {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      style={styles.wrapper}
+      style={[styles.wrapper, { backgroundColor: colors.background }]}
     >
       <ScrollView contentContainerStyle={styles.container}>
-        <Text style={styles.title}>{mode === 'edit' ? 'Kitap Düzenle' : 'Yeni Kitap Ekle'}</Text>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>{mode === 'edit' ? 'Kitap Düzenle' : 'Yeni Kitap Ekle'}</Text>
 
-        <TextInput style={styles.input} placeholder="Başlık" value={form.title} onChangeText={(text) => updateField('title', text)} />
-        <TextInput style={styles.input} placeholder="Yazar" value={form.author} onChangeText={(text) => updateField('author', text)} />
-        <TextInput style={styles.input} placeholder="Tür" value={form.genre} onChangeText={(text) => updateField('genre', text)} />
-        <TextInput style={styles.input} placeholder="ISBN" value={form.isbn} onChangeText={(text) => updateField('isbn', text)} />
-        <TextInput style={styles.input} placeholder="Yayın Yılı" value={form.published_year} keyboardType="numeric" onChangeText={(text) => updateField('published_year', text)} />
-        <TextInput style={styles.input} placeholder="Toplam Kopya" value={form.total_copies} keyboardType="numeric" onChangeText={(text) => updateField('total_copies', text)} />
-        <TextInput style={styles.input} placeholder="Mevcut Kopya" value={form.available_copies} keyboardType="numeric" onChangeText={(text) => updateField('available_copies', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Başlık" value={form.title} onChangeText={(text) => updateField('title', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Yazar" value={form.author} onChangeText={(text) => updateField('author', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Tür" value={form.genre} onChangeText={(text) => updateField('genre', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="ISBN" value={form.isbn} onChangeText={(text) => updateField('isbn', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Kapak URL (opsiyonel)" value={form.cover_url} onChangeText={(text) => updateField('cover_url', text)} autoCapitalize="none" />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Yayın Yılı" value={form.published_year} keyboardType="numeric" onChangeText={(text) => updateField('published_year', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Toplam Kopya" value={form.total_copies} keyboardType="numeric" onChangeText={(text) => updateField('total_copies', text)} />
+        <TextInput style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]} placeholderTextColor={colors.textSecondary} placeholder="Mevcut Kopya" value={form.available_copies} keyboardType="numeric" onChangeText={(text) => updateField('available_copies', text)} />
 
-        <Pressable style={styles.button} onPress={handleSubmit} disabled={saving}>
+        <Pressable style={[styles.button, { backgroundColor: colors.primary }]} onPress={handleSubmit} disabled={saving}>
           {saving ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>Kaydet</Text>}
         </Pressable>
       </ScrollView>

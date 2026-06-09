@@ -46,34 +46,34 @@ export default function HomeScreen({ navigation }) {
     <ScrollView style={[styles.container, { backgroundColor: colors.background }]} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
         
-        <Text style={[styles.title, { color: colors.card === '#ffffff' ? '#0b3d2e' : colors.textPrimary }]}>Kitap akışı, stok ve filtreler tek merkezde.</Text>
-        {user && <Text style={[styles.subtitle, { color: colors.textSecondary }]}>{user.full_name || user.email}</Text>}
+        <Text style={[styles.title, { color: '#ffffff' }]}>Kitap akışı, stok ve filtreler tek merkezde.</Text>
+        {user && <Text style={[styles.subtitle, { color: '#d5e7e1' }]}>{user.full_name || user.email}</Text>}
 
         <View style={styles.heroActions}>
           <Pressable style={[styles.primaryButton, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('BookList')}>
             <Text style={[styles.primaryButtonText, { color: colors.textPrimary }]}>Kitapları Aç</Text>
           </Pressable>
           <Pressable style={[styles.secondaryButton, { borderColor: colors.border }]} onPress={refreshBooks}>
-            <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Yenile</Text>
+            <Text style={[styles.secondaryButtonText, { color: '#ffffff' }]}>Yenile</Text>
           </Pressable>
         </View>
-        <Text style={[styles.syncText, { color: colors.textSecondary }]}>Son senkronizasyon: {formatSyncedAt(lastSyncedAt)}</Text>
+        <Text style={[styles.syncText, { color: '#d5e7e1' }]}>Son senkronizasyon: {formatSyncedAt(lastSyncedAt)}</Text>
       </View>
 
       <View style={styles.statsGrid}>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.totalBooks}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Toplam Kitap</Text>
         </View>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.booksInStock}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Stokta Olan</Text>
         </View>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.outOfStockBooks}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tükenen</Text>
         </View>
-        <View style={styles.statCard}>
+        <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{dashboardStats.uniqueGenres}</Text>
           <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Tür</Text>
         </View>
@@ -82,14 +82,14 @@ export default function HomeScreen({ navigation }) {
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
       <View style={[styles.quickActionsBox, { backgroundColor: colors.surface, borderColor: colors.border }] }>
-        <Text style={styles.sectionTitle}>Hızlı Eylemler</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Hızlı Eylemler</Text>
 
         <View style={styles.quickActionsRow}>
           <Pressable style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => goToList({ search: '', inStock: true })}>
             <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Stokta Olanlar</Text>
             <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Sadece aktif kitaplar</Text>
           </Pressable>
-          <Pressable style={styles.quickActionButton} onPress={() => goToList({ search: '' })}>
+          <Pressable style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]} onPress={() => goToList({ search: '' })}>
             <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Tüm Liste</Text>
             <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Filtreleri temizle</Text>
           </Pressable>
@@ -122,11 +122,11 @@ export default function HomeScreen({ navigation }) {
           </Pressable>
           {user?.role === 'admin' && (
             <Pressable
-              style={styles.quickActionButton}
+              style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => navigation.navigate('AdminLoanRequests')}
             >
-              <Text style={styles.quickActionTitle}>Admin Panel</Text>
-              <Text style={styles.quickActionText}>İstekleri yönet</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Admin Panel</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>İstekleri yönet</Text>
             </Pressable>
           )}
         </View>
@@ -134,28 +134,28 @@ export default function HomeScreen({ navigation }) {
         {user?.role === 'admin' && (
           <View style={styles.quickActionsRow}>
             <Pressable
-              style={styles.quickActionButton}
+              style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
               onPress={() => navigation.navigate('AdminUserList')}
             >
-              <Text style={styles.quickActionTitle}>Kullanıcı Yönetimi</Text>
-              <Text style={styles.quickActionText}>Kullanıcıları yönet</Text>
+              <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>Kullanıcı Yönetimi</Text>
+              <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>Kullanıcıları yönet</Text>
             </Pressable>
           </View>
         )}
 
         <View style={styles.quickActionsRow}>
           <Pressable
-            style={styles.quickActionButton}
+            style={[styles.quickActionButton, { backgroundColor: colors.surface, borderColor: colors.border }]}
             onPress={() => navigation.navigate('Statistics')}
           >
-            <Text style={styles.quickActionTitle}>İstatistikler</Text>
-            <Text style={styles.quickActionText}>En çok ödünç alınanlar</Text>
+            <Text style={[styles.quickActionTitle, { color: colors.textPrimary }]}>İstatistikler</Text>
+            <Text style={[styles.quickActionText, { color: colors.textSecondary }]}>En çok ödünç alınanlar</Text>
           </Pressable>
         </View>
       </View>
 
       <View style={styles.sectionBox}>
-        <Text style={styles.sectionTitle}>Son Eklenen Kitaplar</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Son Eklenen Kitaplar</Text>
         {featuredBooks.length > 0 ? (
           featuredBooks.map((book) => (
             <BookCard

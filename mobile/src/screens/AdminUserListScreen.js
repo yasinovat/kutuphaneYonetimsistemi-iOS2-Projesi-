@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -11,9 +11,11 @@ import {
   RefreshControl
 } from 'react-native';
 import { useUsers } from '../contexts/UserContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function AdminUserListScreen() {
   const { users, isLoading, error, fetchUsers, toggleUserStatus } = useUsers();
+  const { colors } = useContext(ThemeContext);
   const [refreshing, setRefreshing] = useState(false);
   const [togglingUserId, setTogglingUserId] = useState(null);
 
@@ -46,10 +48,10 @@ export default function AdminUserListScreen() {
   };
 
   const renderUserItem = ({ item }) => (
-    <View style={styles.userCard}>
+    <View style={[styles.userCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
       <View style={styles.userInfo}>
-        <Text style={styles.userName}>{item.full_name}</Text>
-        <Text style={styles.userEmail}>{item.email}</Text>
+        <Text style={[styles.userName, { color: colors.textPrimary }]}>{item.full_name}</Text>
+        <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{item.email}</Text>
         <View style={styles.roleContainer}>
           <Text
             style={[
@@ -63,7 +65,7 @@ export default function AdminUserListScreen() {
       </View>
 
       <View style={styles.statusToggle}>
-        <Text style={styles.statusLabel}>
+        <Text style={[styles.statusLabel, { color: colors.textPrimary }]}>
           {item.is_active ? 'Aktif' : 'Pasif'}
         </Text>
         <Switch
@@ -81,7 +83,7 @@ export default function AdminUserListScreen() {
 
   if (error && !isLoading) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <Text style={styles.errorText}>Hata: {error}</Text>
         <TouchableOpacity style={styles.retryButton} onPress={fetchUsers}>
           <Text style={styles.retryButtonText}>Tekrar Deneyin</Text>
@@ -91,18 +93,18 @@ export default function AdminUserListScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Kullanıcı Yönetimi</Text>
-        <Text style={styles.userCount}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Kullanıcı Yönetimi</Text>
+        <Text style={[styles.userCount, { color: colors.textSecondary }]}>
           Toplam: {users.length} | Aktif: {users.filter(u => u.is_active).length}
         </Text>
       </View>
 
       {isLoading && users.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color="#2196F3" />
-          <Text style={styles.loadingText}>Kullanıcılar yükleniyor...</Text>
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Kullanıcılar yükleniyor...</Text>
         </View>
       ) : (
         <FlatList
@@ -111,11 +113,11 @@ export default function AdminUserListScreen() {
           keyExtractor={item => item.id.toString()}
           contentContainerStyle={styles.listContent}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
           }
           ListEmptyComponent={
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyText}>Kullanıcı bulunamadı.</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Kullanıcı bulunamadı.</Text>
             </View>
           }
         />

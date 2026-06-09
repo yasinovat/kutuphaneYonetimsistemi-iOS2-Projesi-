@@ -4,6 +4,7 @@ import { ActivityIndicator, FlatList, Pressable, RefreshControl, StyleSheet, Tex
 import BookCard from '../components/BookCard';
 import { AuthContext } from '../contexts/AuthContext';
 import { BooksContext } from '../contexts/BooksContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function BookListScreen({ navigation, route }) {
   const { user } = useContext(AuthContext);
@@ -22,6 +23,7 @@ export default function BookListScreen({ navigation, route }) {
     refreshBooks
   } = useContext(BooksContext);
   const { getCoverForBook } = useContext(BooksContext);
+  const { colors } = useContext(ThemeContext);
 
   useEffect(() => {
     const initialFilters = route.params?.initialFilters;
@@ -42,15 +44,16 @@ export default function BookListScreen({ navigation, route }) {
 
   const header = (
     <View style={styles.headerBox}>
-      <Text style={styles.pageTitle}>Kitap Listesi</Text>
-      <Text style={styles.pageSubtitle}>
+      <Text style={[styles.pageTitle, { color: colors.textPrimary }]}>Kitap Listesi</Text>
+      <Text style={[styles.pageSubtitle, { color: colors.textSecondary }]}>
         {dashboardStats.totalBooks} kitap, {dashboardStats.booksInStock} stokta, {dashboardStats.outOfStockBooks} tükenmiş.
       </Text>
 
-      <View style={styles.searchBox}>
+      <View style={[styles.searchBox, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <TextInput
-          style={styles.input}
+          style={[styles.input, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
           placeholder="Genel arama"
+          placeholderTextColor={colors.textSecondary}
           value={filters.search}
           onChangeText={(text) => updateFilters({ search: text })}
           returnKeyType="search"
@@ -59,41 +62,44 @@ export default function BookListScreen({ navigation, route }) {
 
         <View style={styles.filterGrid}>
           <TextInput
-            style={[styles.input, styles.gridItem]}
+            style={[styles.input, styles.gridItem, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
             placeholder="Başlık"
+            placeholderTextColor={colors.textSecondary}
             value={filters.title}
             onChangeText={(text) => updateFilters({ title: text })}
           />
           <TextInput
-            style={[styles.input, styles.gridItem]}
+            style={[styles.input, styles.gridItem, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
             placeholder="Yazar"
+            placeholderTextColor={colors.textSecondary}
             value={filters.author}
             onChangeText={(text) => updateFilters({ author: text })}
           />
           <TextInput
-            style={[styles.input, styles.gridItem]}
+            style={[styles.input, styles.gridItem, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
             placeholder="Tür"
+            placeholderTextColor={colors.textSecondary}
             value={filters.genre}
             onChangeText={(text) => updateFilters({ genre: text })}
           />
         </View>
 
-        <Pressable style={[styles.stockToggle, filters.inStock && styles.stockToggleActive]} onPress={() => updateFilters({ inStock: !filters.inStock })}>
-          <Text style={[styles.stockToggleText, filters.inStock && styles.stockToggleTextActive]}>
+        <Pressable style={[styles.stockToggle, { backgroundColor: colors.input, borderColor: colors.border }, filters.inStock && styles.stockToggleActive]} onPress={() => updateFilters({ inStock: !filters.inStock })}>
+          <Text style={[styles.stockToggleText, { color: colors.textPrimary }, filters.inStock && styles.stockToggleTextActive]}>
             Sadece stokta olanlar
           </Text>
         </Pressable>
 
         <View style={styles.actionRow}>
-          <Pressable style={styles.primaryButton} onPress={handleSearch}>
+          <Pressable style={[styles.primaryButton, { backgroundColor: colors.primary }]} onPress={handleSearch}>
             <Text style={styles.primaryButtonText}>Ara</Text>
           </Pressable>
-          <Pressable style={styles.secondaryButton} onPress={handleClearFilters}>
-            <Text style={styles.secondaryButtonText}>Temizle</Text>
+          <Pressable style={[styles.secondaryButton, { backgroundColor: colors.input, borderColor: colors.border }]} onPress={handleClearFilters}>
+            <Text style={[styles.secondaryButtonText, { color: colors.textPrimary }]}>Temizle</Text>
           </Pressable>
         </View>
 
-        <Text style={styles.syncText}>
+        <Text style={[styles.syncText, { color: colors.textSecondary }]}>
           Son güncelleme: {lastSyncedAt ? new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' }).format(new Date(lastSyncedAt)) : 'yok'}
         </Text>
 
@@ -108,17 +114,17 @@ export default function BookListScreen({ navigation, route }) {
 
   if (isLoading && books.length === 0) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error && books.length === 0) {
     return (
-      <View style={styles.centerContainer}>
+      <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
         <Text style={styles.errorText}>{error}</Text>
-        <Pressable style={styles.retryButton} onPress={refreshBooks}>
+        <Pressable style={[styles.retryButton, { backgroundColor: colors.primary }]} onPress={refreshBooks}>
           <Text style={styles.retryButtonText}>Tekrar Dene</Text>
         </Pressable>
       </View>
@@ -126,14 +132,14 @@ export default function BookListScreen({ navigation, route }) {
   }
 
   return (
-    <View style={styles.screen}>
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <FlatList
         contentContainerStyle={styles.listContainer}
         data={books}
         keyExtractor={(item) => String(item.id)}
         renderItem={({ item }) => {
           const cacheKey = item?.id ?? item?.isbn ?? `${item?.title || ''}-${item?.author || ''}`;
-          const cached = getCoverForBook(cacheKey);
+          const cached = getCoverForBook(cacheKey) || item.cover_url;
 
           return (
             <View style={styles.cardWrap}>
@@ -145,8 +151,8 @@ export default function BookListScreen({ navigation, route }) {
           );
         }}
         ListHeaderComponent={header}
-        ListEmptyComponent={<Text style={styles.emptyText}>Filtrelere uygun kitap bulunamadı.</Text>}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshBooks} tintColor="#0b3d2e" colors={['#0b3d2e']} />}
+        ListEmptyComponent={<Text style={[styles.emptyText, { color: colors.textSecondary }]}>Filtrelere uygun kitap bulunamadı.</Text>}
+        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refreshBooks} tintColor={colors.primary} colors={[colors.primary]} />}
       />
     </View>
   );

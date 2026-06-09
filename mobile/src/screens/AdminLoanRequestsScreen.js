@@ -11,8 +11,9 @@ import {
   View
 } from 'react-native';
 import { LoanRequestContext } from '../contexts/LoanRequestContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
-function RequestCard({ request, onApprove, onReject, isProcessing }) {
+function RequestCard({ request, onApprove, onReject, isProcessing, colors }) {
   const [showRejectReason, setShowRejectReason] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
@@ -27,36 +28,36 @@ function RequestCard({ request, onApprove, onReject, isProcessing }) {
   };
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.cardHeader}>
         <View style={styles.cardTitle}>
-          <Text style={styles.bookTitle} numberOfLines={1}>
+          <Text style={[styles.bookTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {request.book_title}
           </Text>
-          <Text style={styles.memberName}>{request.member_name}</Text>
+          <Text style={[styles.memberName, { color: colors.textSecondary }]}>{request.member_name}</Text>
         </View>
-        <Text style={styles.requestDate}>
+        <Text style={[styles.requestDate, { color: colors.textSecondary }]}>
           {new Date(request.request_date).toLocaleDateString('tr-TR')}
         </Text>
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.authorText}>{request.book_author}</Text>
+        <Text style={[styles.authorText, { color: colors.textSecondary }]}>{request.book_author}</Text>
         {request.note && (
-          <Text style={styles.noteText} numberOfLines={2}>
+          <Text style={[styles.noteText, { color: colors.textSecondary, borderTopColor: colors.divider }]} numberOfLines={2}>
             "{request.note}"
           </Text>
         )}
         {request.desired_date && (
-          <Text style={styles.desiredDateText}>Talep Edilen Tarih: {new Date(request.desired_date).toLocaleDateString('tr-TR')}</Text>
+          <Text style={[styles.desiredDateText, { color: colors.textPrimary }]}>Talep Edilen Tarih: {new Date(request.desired_date).toLocaleDateString('tr-TR')}</Text>
         )}
         {request.delivery_date && (
-          <Text style={styles.desiredDateText}>Teslim Tarihi: {new Date(request.delivery_date).toLocaleDateString('tr-TR')}</Text>
+          <Text style={[styles.desiredDateText, { color: colors.textPrimary }]}>Teslim Tarihi: {new Date(request.delivery_date).toLocaleDateString('tr-TR')}</Text>
         )}
       </View>
 
       {!showRejectReason ? (
-        <View style={styles.actionButtonsContainer}>
+        <View style={[styles.actionButtonsContainer, { borderTopColor: colors.divider }]}>
           <Pressable
             style={[styles.actionButton, styles.approveButton]}
             onPress={() => onApprove(request.id)}
@@ -77,11 +78,11 @@ function RequestCard({ request, onApprove, onReject, isProcessing }) {
           </Pressable>
         </View>
       ) : (
-        <View style={styles.rejectForm}>
+        <View style={[styles.rejectForm, { borderTopColor: colors.divider }]}>
           <TextInput
-            style={styles.rejectInput}
+            style={[styles.rejectInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
             placeholder="Red sebebini yazın..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.textSecondary}
             value={rejectReason}
             onChangeText={setRejectReason}
             multiline={true}
@@ -113,6 +114,7 @@ function RequestCard({ request, onApprove, onReject, isProcessing }) {
 }
 
 export default function AdminLoanRequestsScreen({ navigation }) {
+  const { colors } = useContext(ThemeContext);
   const {
     pendingRequests,
     stats,
@@ -171,27 +173,27 @@ export default function AdminLoanRequestsScreen({ navigation }) {
 
   if (isLoading && pendingRequests.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Stats */}
-      <View style={styles.statsContainer}>
-        <View style={styles.statBox}>
+      <View style={[styles.statsContainer, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <View style={[styles.statBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
           <Text style={styles.statNumber}>{stats.pending}</Text>
-          <Text style={styles.statLabel}>Bekleniyor</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Bekleniyor</Text>
         </View>
-        <View style={styles.statBox}>
+        <View style={[styles.statBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
           <Text style={[styles.statNumber, { color: '#10b981' }]}>{stats.approved}</Text>
-          <Text style={styles.statLabel}>Onaylı</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Onaylı</Text>
         </View>
-        <View style={styles.statBox}>
+        <View style={[styles.statBox, { backgroundColor: colors.input, borderColor: colors.border }]}>
           <Text style={[styles.statNumber, { color: '#ef4444' }]}>{stats.rejected}</Text>
-          <Text style={styles.statLabel}>Reddedilen</Text>
+          <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Reddedilen</Text>
         </View>
       </View>
 
@@ -210,13 +212,15 @@ export default function AdminLoanRequestsScreen({ navigation }) {
             onApprove={handleApprove}
             onReject={handleReject}
             isProcessing={processingId === item.id}
+            colors={colors}
           />
         )}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={['#0b3d2e']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={renderEmpty}

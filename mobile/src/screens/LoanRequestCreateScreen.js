@@ -10,30 +10,40 @@ import {
   Pressable,
   FlatList
 } from 'react-native';
-import { Platform } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { LoanRequestContext } from '../contexts/LoanRequestContext';
 import { BooksContext } from '../contexts/BooksContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 export default function LoanRequestCreateScreen({ navigation }) {
   const { books } = useContext(BooksContext);
   const { createNewRequest, error } = useContext(LoanRequestContext);
+  const { colors } = useContext(ThemeContext);
   const [selectedBookId, setSelectedBookId] = useState(null);
   const [note, setNote] = useState('');
   const todayIso = new Date().toISOString().split('T')[0];
   const [desiredDate, setDesiredDate] = useState(todayIso);
   const [deliveryDate, setDeliveryDate] = useState('');
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [isPickingDelivery, setIsPickingDelivery] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showBookPicker, setShowBookPicker] = useState(false);
 
   const selectedBook = books.find(b => b.id === selectedBookId);
   const availableBooks = books.filter(b => b.available_copies > 0);
+  const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+  const isValidDateInput = (value) => {
+    if (!value) return true;
+    if (!datePattern.test(value)) return false;
+    return !Number.isNaN(new Date(value).getTime());
+  };
 
   const handleCreateRequest = async () => {
     if (!selectedBookId) {
       Alert.alert('Hata', 'Lütfen bir kitap seçin.');
+      return;
+    }
+
+    if (!isValidDateInput(desiredDate) || !isValidDateInput(deliveryDate)) {
+      Alert.alert('Hata', 'Tarihleri YYYY-AA-GG formatında giriniz. Örnek: 2026-06-09');
       return;
     }
 
@@ -52,58 +62,13 @@ export default function LoanRequestCreateScreen({ navigation }) {
     }
   };
 
-  const handleDateChange = (event, selected) => {
-    setShowDatePicker(false);
-    if (event?.type === 'dismissed') {
-      setIsPickingDelivery(false);
-      return;
-    }
-    const d = selected || new Date();
-    const iso = d.toISOString().split('T')[0];
-    if (isPickingDelivery) setDeliveryDate(iso);
-    else setDesiredDate(iso);
-    setIsPickingDelivery(false);
-  };
-
-  const openDesiredDatePicker = () => {
-    if (Platform.OS === 'web') {
-      const input = window.prompt('İstenen tarih (YYYY-MM-DD):', desiredDate || todayIso);
-      if (!input) return;
-      const m = input.match(/^\d{4}-\d{2}-\d{2}$/);
-      if (!m) {
-        Alert.alert('Hata', 'Lütfen tarihi YYYY-AA-GG formatında girin.');
-        return;
-      }
-      setDesiredDate(input);
-      return;
-    }
-    setIsPickingDelivery(false);
-    setShowDatePicker(true);
-  };
-
-  const openDeliveryDatePicker = () => {
-    if (Platform.OS === 'web') {
-      const input = window.prompt('Teslim tarihi (YYYY-MM-DD):', deliveryDate || todayIso);
-      if (!input) return;
-      const m = input.match(/^\d{4}-\d{2}-\d{2}$/);
-      if (!m) {
-        Alert.alert('Hata', 'Lütfen tarihi YYYY-AA-GG formatında girin.');
-        return;
-      }
-      setDeliveryDate(input);
-      return;
-    }
-    setIsPickingDelivery(true);
-    setShowDatePicker(true);
-  };
-
   const handleSelectBook = (book) => {
     setSelectedBookId(book.id);
     setShowBookPicker(false);
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {!showBookPicker ? (
         <ScrollView style={styles.content} contentContainerStyle={styles.contentPadding}>
           {error ? (
@@ -114,20 +79,20 @@ export default function LoanRequestCreateScreen({ navigation }) {
 
           {/* Kitap Seçimi */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Kitap Seçin *</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Kitap Seçin *</Text>
             <Pressable
-              style={[styles.selectButton, !selectedBook && styles.selectButtonEmpty]}
+              style={[styles.selectButton, { backgroundColor: colors.input, borderColor: colors.border }, !selectedBook && styles.selectButtonEmpty]}
               onPress={() => setShowBookPicker(true)}
             >
               {selectedBook ? (
                 <View style={styles.selectedBookContent}>
-                  <Text style={styles.selectedBookTitle}>{selectedBook.title}</Text>
-                  <Text style={styles.selectedBookAuthor}>
+                  <Text style={[styles.selectedBookTitle, { color: colors.textPrimary }]}>{selectedBook.title}</Text>
+                  <Text style={[styles.selectedBookAuthor, { color: colors.textSecondary }]}>
                     {selectedBook.author}
                   </Text>
                 </View>
               ) : (
-                <Text style={styles.selectButtonPlaceholder}>
+                <Text style={[styles.selectButtonPlaceholder, { color: colors.textSecondary }]}>
                   Kitap seçmek için tıklayın...
                 </Text>
               )}
@@ -141,49 +106,41 @@ export default function LoanRequestCreateScreen({ navigation }) {
 
           {/* Not */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Not (İsteğe bağlı)</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Not (İsteğe bağlı)</Text>
             <TextInput
-              style={styles.textInput}
+              style={[styles.textInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
               placeholder="Kütüphaneci için bir not yazın..."
-              placeholderTextColor="#9ca3af"
+              placeholderTextColor={colors.textSecondary}
               multiline={true}
               numberOfLines={4}
               value={note}
               onChangeText={setNote}
               editable={!isSubmitting}
             />
-            <Text style={styles.charCount}>{note.length}/500</Text>
+            <Text style={[styles.charCount, { color: colors.textSecondary }]}>{note.length}/500</Text>
           </View>
 
           {/* Tarih Seçici */}
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Kitabı Almak İstediğim Tarih (İsteğe bağlı)</Text>
-            <Pressable
-              style={[styles.selectButton, !desiredDate && styles.selectButtonEmpty]}
-              onPress={openDesiredDatePicker}
-            >
-              <Text style={desiredDate ? styles.selectedDateText : styles.selectButtonPlaceholder}>
-                {desiredDate ? new Date(desiredDate).toLocaleDateString('tr-TR') : 'Tarih seçmek için tıklayın...'}
-              </Text>
-            </Pressable>
-            <Text style={[styles.sectionTitle, { marginTop: 12 }]}>Geri Vereceğim Tarih (Zorunlu)</Text>
-            <Pressable
-              style={[styles.selectButton, !deliveryDate && styles.selectButtonEmpty]}
-              onPress={openDeliveryDatePicker}
-            >
-              <Text style={deliveryDate ? styles.selectedDateText : styles.selectButtonPlaceholder}>
-                {deliveryDate ? new Date(deliveryDate).toLocaleDateString('tr-TR') : 'Geri vereceğim tarihi seçin...'}
-              </Text>
-            </Pressable>
-            {showDatePicker && (
-              <DateTimePicker
-                value={isPickingDelivery ? (deliveryDate ? new Date(deliveryDate) : new Date()) : (desiredDate ? new Date(desiredDate) : new Date())}
-                mode="date"
-                display="calendar"
-                onChange={handleDateChange}
-                minimumDate={new Date()}
-              />
-            )}
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Kitabı Almak İstediğim Tarih (İsteğe bağlı)</Text>
+            <TextInput
+              style={[styles.dateInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
+              placeholder="YYYY-AA-GG"
+              placeholderTextColor={colors.textSecondary}
+              value={desiredDate}
+              onChangeText={setDesiredDate}
+              editable={!isSubmitting}
+            />
+            <Text style={[styles.sectionTitle, { marginTop: 12, color: colors.textPrimary }]}>Geri Vereceğim Tarih (İsteğe bağlı)</Text>
+            <TextInput
+              style={[styles.dateInput, { backgroundColor: colors.input, borderColor: colors.border, color: colors.inputText }]}
+              placeholder="Boş bırakırsanız 14 gün hesaplanır"
+              placeholderTextColor={colors.textSecondary}
+              value={deliveryDate}
+              onChangeText={setDeliveryDate}
+              editable={!isSubmitting}
+            />
+            <Text style={[styles.dateHint, { color: colors.textSecondary }]}>Tarih formatı: YYYY-AA-GG. Örnek: {todayIso}</Text>
           </View>
 
           {/* Bilgilendirme */}
@@ -313,6 +270,21 @@ const styles = StyleSheet.create({
     color: '#1f2937',
     fontSize: 14,
     fontWeight: '600'
+  },
+  dateInput: {
+    borderWidth: 2,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+    backgroundColor: '#fff',
+    color: '#1f2937',
+    fontSize: 14
+  },
+  dateHint: {
+    color: '#6b7280',
+    fontSize: 12,
+    marginTop: 8
   },
   selectedBookContent: {
     flex: 1

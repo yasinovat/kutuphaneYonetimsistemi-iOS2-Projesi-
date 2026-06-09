@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native';
 import { LoanRequestContext } from '../contexts/LoanRequestContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 const getStatusColor = (status) => {
   const colors = {
@@ -32,7 +33,7 @@ const getStatusLabel = (status) => {
   return labels[status] || status;
 };
 
-function RequestCard({ request, onPress, onCancel }) {
+function RequestCard({ request, onPress, onCancel, colors }) {
   const handleSmallCancel = () => {
     try {
       // quick local trace for debugging
@@ -44,10 +45,10 @@ function RequestCard({ request, onPress, onCancel }) {
     if (onCancel) onCancel(request);
   };
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.cardHeader}>
         <Pressable onPress={onPress} style={{ flex: 1 }}>
-          <Text style={styles.bookTitle} numberOfLines={1}>
+          <Text style={[styles.bookTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {request.book_title || 'Bilinmiyor'}
           </Text>
         </Pressable>
@@ -57,16 +58,16 @@ function RequestCard({ request, onPress, onCancel }) {
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.authorText}>
+        <Text style={[styles.authorText, { color: colors.textSecondary }]}>
           {request.book_author || 'Yazarı bilinmiyor'}
         </Text>
-        <Text style={styles.dateText}>
+        <Text style={[styles.dateText, { color: colors.textSecondary }]}>
           {new Date(request.request_date).toLocaleDateString('tr-TR')}
         </Text>
       </View>
 
       {request.note && (
-        <Text style={styles.noteText} numberOfLines={2}>
+        <Text style={[styles.noteText, { color: colors.textSecondary, borderTopColor: colors.divider }]} numberOfLines={2}>
           {request.note}
         </Text>
       )}
@@ -78,12 +79,12 @@ function RequestCard({ request, onPress, onCancel }) {
         </View>
       )}
       {request.desired_date && (
-        <Text style={styles.desiredDateText}>
+          <Text style={[styles.desiredDateText, { color: colors.textPrimary }]}>
           İstenen Tarih: {new Date(request.desired_date).toLocaleDateString('tr-TR')}
         </Text>
       )}
       {request.delivery_date && (
-        <Text style={styles.desiredDateText}>
+          <Text style={[styles.desiredDateText, { color: colors.textPrimary }]}>
           Teslim Tarihi: {new Date(request.delivery_date).toLocaleDateString('tr-TR')}
         </Text>
       )}
@@ -104,6 +105,7 @@ function RequestCard({ request, onPress, onCancel }) {
 }
 
 export default function LoanRequestListScreen({ navigation }) {
+  const { colors } = useContext(ThemeContext);
   const { myRequests, isLoading, isRefreshing, error, loadMyRequests, cancelRequest } = useContext(LoanRequestContext);
 
   useEffect(() => {
@@ -175,18 +177,18 @@ export default function LoanRequestListScreen({ navigation }) {
 
   if (isLoading && myRequests.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Ödünç Alma İsteklerim</Text>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Ödünç Alma İsteklerim</Text>
         <Pressable
           style={styles.addButton}
           onPress={() => navigation.navigate('LoanRequestCreate')}
@@ -199,13 +201,14 @@ export default function LoanRequestListScreen({ navigation }) {
         data={myRequests}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <RequestCard request={item} onPress={() => handleRequestPress(item)} onCancel={handleCancelPress} />
+          <RequestCard request={item} onPress={() => handleRequestPress(item)} onCancel={handleCancelPress} colors={colors} />
         )}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={['#0b3d2e']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={renderEmpty}

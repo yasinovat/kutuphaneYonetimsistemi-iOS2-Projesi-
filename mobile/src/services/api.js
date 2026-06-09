@@ -1,6 +1,7 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+let unauthorizedHandler = null;
 let DEFAULT_API_BASE_URL = 'http://localhost:5000/api';
 
 // Hangi platformda olduğumuzu kontrol et
@@ -14,6 +15,10 @@ const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || DEFAULT_API_BASE_URL;
 
 console.log('API Base URL:', API_BASE_URL); // Debug için
 console.log('Platform:', Platform.OS); // Debug için
+
+export function setUnauthorizedHandler(handler) {
+  unauthorizedHandler = handler;
+}
 
 function buildQueryString(params = {}) {
   const searchParams = new URLSearchParams();
@@ -56,6 +61,14 @@ async function apiFetch(endpoint, options = {}) {
     } catch (e) {
       // JSON parse hatası, errorMessage'ı olduğu gibi kullan
     }
+
+    if (response.status === 401) {
+      await AsyncStorage.multiRemove(['userToken', 'userData']);
+      if (typeof unauthorizedHandler === 'function') {
+        unauthorizedHandler(errorMessage);
+      }
+    }
+
     throw new Error(errorMessage);
   }
 

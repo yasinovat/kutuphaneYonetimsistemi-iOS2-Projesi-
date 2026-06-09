@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View, TouchableOpacity, Text } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -27,7 +27,7 @@ import ActiveLoansScreen from './src/screens/ActiveLoansScreen';
 import LoanDetailScreen from './src/screens/LoanDetailScreen';
 import StatisticsScreen from './src/screens/StatisticsScreen';
 
-const Stack = createNativeStackNavigator();
+const Stack = createStackNavigator();
 
 // Auth stack (Login / Register)
 function AuthStack() {
@@ -37,7 +37,6 @@ function AuthStack() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        animationEnabled: true,
         cardStyle: { backgroundColor: colors.background }
       }}
     >
@@ -65,11 +64,10 @@ function AppStack() {
       initialRouteName="Home"
       screenOptions={{
       headerStyle: { backgroundColor: colors.primary },
-      headerTintColor: colors.textPrimary,
+      headerTintColor: colors.headerText,
       headerTitleStyle: { fontWeight: 'bold' },
-      contentStyle: { backgroundColor: colors.background },
+      cardStyle: { backgroundColor: colors.background },
       headerBackVisible: true,
-      headerBackTitleVisible: false
       }}
     >
       <Stack.Screen

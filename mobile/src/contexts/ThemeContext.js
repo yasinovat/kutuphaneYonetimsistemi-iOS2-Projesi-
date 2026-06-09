@@ -16,17 +16,25 @@ const lightColors = {
   textSecondary: '#667d75',
   border: '#d6e2dc',
   primary: '#0b3d2e',
-  card: '#ffffff'
+  card: '#ffffff',
+  headerText: '#ffffff',
+  input: '#ffffff',
+  inputText: '#143d31',
+  divider: '#e0e0e0'
 };
 
 const darkColors = {
   background: '#0f1614',
-  surface: '#111416',
+  surface: '#17211e',
   textPrimary: '#e6f2ec',
-  textSecondary: '#9aa9a1',
-  border: '#1f2a28',
+  textSecondary: '#b6c7bf',
+  border: '#31403b',
   primary: '#2bd176',
-  card: '#0f1614'
+  card: '#0f1614',
+  headerText: '#06110c',
+  input: '#121b18',
+  inputText: '#e6f2ec',
+  divider: '#26332f'
 };
 
 export function ThemeProvider({ children }) {

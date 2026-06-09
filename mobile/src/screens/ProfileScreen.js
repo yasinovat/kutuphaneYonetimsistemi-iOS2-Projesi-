@@ -113,27 +113,32 @@ export default function ProfileScreen() {
             <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Ad Soyad</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user?.full_name || '-'}</Text>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           <View style={[styles.infoRow, { alignItems: 'center' }]}>
             <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Karanlık Mod</Text>
             <View style={styles.themeRow}>
-              <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>{isDark ? 'Açık' : 'Koyu'}</Text>
-              <Switch value={isDark} onValueChange={toggleTheme} />
+              <Text style={[styles.themeLabel, { color: colors.textSecondary }]}>{isDark ? 'Koyu' : 'Açık'}</Text>
+              <Switch
+                value={isDark}
+                onValueChange={toggleTheme}
+                trackColor={{ false: '#d6e2dc', true: '#1f7a35' }}
+                thumbColor={isDark ? colors.primary : '#ffffff'}
+              />
             </View>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Email</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user?.email || '-'}</Text>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Rol</Text>
             <Text style={[styles.infoValue, { color: user?.role === 'admin' ? '#ef4444' : '#10b981' }]}>
               {getRoleLabel(user?.role)}
             </Text>
           </View>
-          <View style={styles.divider} />
+          <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Kayıt Tarihi</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{formatDate(user?.created_at)}</Text>
@@ -347,4 +352,3 @@ const styles = StyleSheet.create({
     fontWeight: '600'
   }
 });
-    opacity: 0.6

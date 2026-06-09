@@ -5,20 +5,23 @@ import { AuthContext } from '../contexts/AuthContext';
 import { BooksContext } from '../contexts/BooksContext';
 import { deleteBook, fetchBookById } from '../services/api';
 import { ThemeContext } from '../contexts/ThemeContext';
+import { fetchBookCoverUrl } from '../components/BookCard';
 
 export default function BookDetailScreen({ route, navigation }) {
   const { user } = useContext(AuthContext);
   const { getBookById, refreshBooks } = useContext(BooksContext);
   const { getCoverForBook } = useContext(BooksContext);
+  const { colors } = useContext(ThemeContext);
   const { bookId } = route.params || {};
   // Önce iletilen kitabı tercih et (kapakUrl içerebilir); yoksa context'ten al ve önbellekteki kapak URL'si ile tamamla
   const rawInitial = route.params?.book || getBookById(bookId);
   const cachedCover = getCoverForBook(rawInitial?.id ?? rawInitial?.isbn ?? `${rawInitial?.title || ''}-${rawInitial?.author || ''}`);
-  const initialBook = rawInitial ? { ...rawInitial, coverUrl: rawInitial.coverUrl || cachedCover } : null;
+  const initialBook = rawInitial ? { ...rawInitial, coverUrl: rawInitial.coverUrl || rawInitial.cover_url || cachedCover } : null;
   const [book, setBook] = useState(initialBook);
   const [loading, setLoading] = useState(!initialBook);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState('');
+  const [failedCoverUrl, setFailedCoverUrl] = useState(null);
 
   useEffect(() => {
     const loadBook = async () => {
@@ -28,7 +31,11 @@ export default function BookDetailScreen({ route, navigation }) {
         }
 
         const data = await fetchBookById(bookId);
-        setBook(data);
+        const nextBook = { ...data, coverUrl: data.cover_url || data.coverUrl };
+        if (!nextBook.coverUrl) {
+          nextBook.coverUrl = await fetchBookCoverUrl(nextBook);
+        }
+        setBook(nextBook);
       } catch (err) {
         setError(err.message || 'Kitap detayı yüklenemedi.');
       } finally {
@@ -76,17 +83,34 @@ export default function BookDetailScreen({ route, navigation }) {
     ]);
   };
 
+  const handleCoverError = async () => {
+    const currentUrl = book.coverUrl;
+    setFailedCoverUrl(currentUrl);
+
+    try {
+      const fallbackUrl = await fetchBookCoverUrl({ ...book, isbn: '' });
+      if (fallbackUrl && fallbackUrl !== currentUrl) {
+        setBook((current) => ({ ...current, coverUrl: fallbackUrl }));
+        return;
+      }
+    } catch (error) {
+      // Harfli kapak fallback olarak kullanılır.
+    }
+
+    setBook((current) => ({ ...current, coverUrl: null }));
+  };
+
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   if (error) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={styles.errorText}>{error}</Text>
       </View>
     );
@@ -94,14 +118,13 @@ export default function BookDetailScreen({ route, navigation }) {
 
   if (!book) {
     return (
-      <View style={styles.center}>
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
         <Text style={styles.errorText}>Kitap bulunamadı.</Text>
       </View>
     );
   }
 
   const isAdmin = user?.role === 'admin';
-  const { colors } = useContext(ThemeContext);
 
   const initials = book.title
     ?.split(' ')
@@ -117,10 +140,10 @@ export default function BookDetailScreen({ route, navigation }) {
           <Text style={{ color: colors.primary, fontWeight: '800' }}>← Geri</Text>
         </Pressable>
       </View>
-      <View style={styles.heroCard}>
+      <View style={[styles.heroCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
         <View style={styles.cover}>
-          {book.coverUrl ? (
-            <Image source={{ uri: book.coverUrl }} style={StyleSheet.absoluteFillObject} resizeMode="cover" />
+          {book.coverUrl && book.coverUrl !== failedCoverUrl ? (
+            <Image source={{ uri: book.coverUrl }} style={styles.coverImage} resizeMode="cover" onError={handleCoverError} />
           ) : (
             <Text style={[styles.coverText, { color: colors.card }]}>{initials}</Text>
           )}
@@ -138,10 +161,10 @@ export default function BookDetailScreen({ route, navigation }) {
 
       <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }] }>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Kitap Bilgileri</Text>
-        <View style={styles.infoRow}><Text style={styles.infoKey}>ISBN</Text><Text style={styles.infoValue}>{book.isbn}</Text></View>
-        <View style={styles.infoRow}><Text style={styles.infoKey}>Yayın Yılı</Text><Text style={styles.infoValue}>{book.published_year || '-'}</Text></View>
-        <View style={styles.infoRow}><Text style={styles.infoKey}>Toplam Kopya</Text><Text style={styles.infoValue}>{book.total_copies}</Text></View>
-        <View style={styles.infoRow}><Text style={styles.infoKey}>Mevcut Kopya</Text><Text style={styles.infoValue}>{book.available_copies}</Text></View>
+        <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}><Text style={[styles.infoKey, { color: colors.textSecondary }]}>ISBN</Text><Text style={[styles.infoValue, { color: colors.textPrimary }]}>{book.isbn}</Text></View>
+        <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}><Text style={[styles.infoKey, { color: colors.textSecondary }]}>Yayın Yılı</Text><Text style={[styles.infoValue, { color: colors.textPrimary }]}>{book.published_year || '-'}</Text></View>
+        <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}><Text style={[styles.infoKey, { color: colors.textSecondary }]}>Toplam Kopya</Text><Text style={[styles.infoValue, { color: colors.textPrimary }]}>{book.total_copies}</Text></View>
+        <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}><Text style={[styles.infoKey, { color: colors.textSecondary }]}>Mevcut Kopya</Text><Text style={[styles.infoValue, { color: colors.textPrimary }]}>{book.available_copies}</Text></View>
       </View>
 
       {isAdmin && (
@@ -190,12 +213,17 @@ const styles = StyleSheet.create({
     elevation: 3
   },
   cover: {
-    width: 76,
-    minHeight: 104,
+    width: 96,
+    height: 144,
     borderRadius: 18,
     backgroundColor: '#0b3d2e',
-    padding: 12,
-    justifyContent: 'space-between'
+    justifyContent: 'space-between',
+    overflow: 'hidden'
+  },
+  coverImage: {
+    ...StyleSheet.absoluteFillObject,
+    width: '100%',
+    height: '100%'
   },
   coverText: {
     color: '#fff',

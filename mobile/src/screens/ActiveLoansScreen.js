@@ -12,6 +12,7 @@ import {
   View
 } from 'react-native';
 import { LoansContext } from '../contexts/LoansContext';
+import { ThemeContext } from '../contexts/ThemeContext';
 
 const getLoanStatusColor = (loan) => {
   if (loan.return_date) {
@@ -33,7 +34,7 @@ const getLoanStatusLabel = (loan) => {
   return 'Aktif';
 };
 
-function LoanCard({ loan, onPress, onReturn, isReturning }) {
+function LoanCard({ loan, onPress, onReturn, isReturning, colors }) {
   const handleReturn = () => {
     if (isReturning) return;
     
@@ -81,10 +82,10 @@ function LoanCard({ loan, onPress, onReturn, isReturning }) {
     : Math.floor((new Date(loan.due_date) - new Date()) / (1000 * 60 * 60 * 24));
 
   return (
-    <View style={styles.card}>
+    <View style={[styles.card, { backgroundColor: colors.surface }]}>
       <View style={styles.cardHeader}>
         <Pressable onPress={onPress} style={{ flex: 1 }}>
-          <Text style={styles.bookTitle} numberOfLines={1}>
+          <Text style={[styles.bookTitle, { color: colors.textPrimary }]} numberOfLines={1}>
             {loan.book_title || 'Bilinmiyor'}
           </Text>
         </Pressable>
@@ -94,19 +95,20 @@ function LoanCard({ loan, onPress, onReturn, isReturning }) {
       </View>
 
       <View style={styles.cardBody}>
-        <Text style={styles.authorText}>
+        <Text style={[styles.authorText, { color: colors.textSecondary }]}>
           {loan.book_author || 'Yazarı bilinmiyor'}
         </Text>
 
-        <View style={styles.dateInfo}>
+        <View style={[styles.dateInfo, { backgroundColor: colors.input }]}>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Ödünç Alınma:</Text>
-            <Text style={styles.dateValue}>{formatDate(loan.loan_date)}</Text>
+            <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>Ödünç Alınma:</Text>
+            <Text style={[styles.dateValue, { color: colors.textPrimary }]}>{formatDate(loan.loan_date)}</Text>
           </View>
           <View style={styles.dateRow}>
-            <Text style={styles.dateLabel}>Iade Tarihi:</Text>
+            <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>Iade Tarihi:</Text>
             <Text style={[
               styles.dateValue,
+              { color: colors.textPrimary },
               loan.is_overdue && !loan.return_date && { color: '#ef4444', fontWeight: 'bold' }
             ]}>
               {formatDate(loan.due_date)}
@@ -114,7 +116,7 @@ function LoanCard({ loan, onPress, onReturn, isReturning }) {
           </View>
           {loan.return_date && (
             <View style={styles.dateRow}>
-              <Text style={styles.dateLabel}>İade Edilme:</Text>
+              <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>İade Edilme:</Text>
               <Text style={[styles.dateValue, { color: '#10b981' }]}>
                 {formatDate(loan.return_date)}
               </Text>
@@ -122,9 +124,10 @@ function LoanCard({ loan, onPress, onReturn, isReturning }) {
           )}
           {!loan.return_date && daysRemaining !== null && (
             <View style={styles.dateRow}>
-              <Text style={styles.dateLabel}>Kalan Gün:</Text>
+              <Text style={[styles.dateLabel, { color: colors.textSecondary }]}>Kalan Gün:</Text>
               <Text style={[
                 styles.dateValue,
+                { color: colors.textPrimary },
                 daysRemaining < 0 && { color: '#ef4444', fontWeight: 'bold' }
               ]}>
                 {daysRemaining < 0 ? `${Math.abs(daysRemaining)} gün geç` : `${daysRemaining} gün`}
@@ -160,6 +163,7 @@ function LoanCard({ loan, onPress, onReturn, isReturning }) {
 }
 
 export default function ActiveLoansScreen({ navigation }) {
+  const { colors } = useContext(ThemeContext);
   const {
     activeLoans,
     overdueCount,
@@ -215,14 +219,14 @@ export default function ActiveLoansScreen({ navigation }) {
 
   if (isLoading && activeLoans.length === 0) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0b3d2e" />
+      <View style={[styles.center, { backgroundColor: colors.background }]}>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       {overdueCount > 0 && (
         <View style={styles.overdueWarning}>
           <Text style={styles.overdueWarningIcon}>⚠️</Text>
@@ -237,10 +241,10 @@ export default function ActiveLoansScreen({ navigation }) {
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
 
-      <View style={styles.header}>
+      <View style={[styles.header, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <View>
-          <Text style={styles.headerTitle}>Aktif Ödünçlerim</Text>
-          <Text style={styles.headerSubtitle}>{activeLoans.length} kitap</Text>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Aktif Ödünçlerim</Text>
+          <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>{activeLoans.length} kitap</Text>
         </View>
       </View>
 
@@ -253,13 +257,15 @@ export default function ActiveLoansScreen({ navigation }) {
             onPress={() => handleLoanPress(item)}
             onReturn={handleReturn}
             isReturning={isReturning}
+            colors={colors}
           />
         )}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
             onRefresh={handleRefresh}
-            colors={['#0b3d2e']}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
           />
         }
         ListEmptyComponent={renderEmpty}

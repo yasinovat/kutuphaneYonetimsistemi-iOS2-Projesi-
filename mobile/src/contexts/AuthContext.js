@@ -1,6 +1,6 @@
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { login as apiLogin, register as apiRegister } from '../services/api';
+import { login as apiLogin, register as apiRegister, setUnauthorizedHandler } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -12,6 +12,22 @@ export function AuthProvider({ children }) {
     user: null,
     error: null
   });
+
+  useEffect(() => {
+    setUnauthorizedHandler((message) => {
+      setAuthState({
+        isLoading: false,
+        isSignout: true,
+        userToken: null,
+        user: null,
+        error: message || 'Oturum süresi doldu. Lütfen tekrar giriş yapın.'
+      });
+    });
+
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, []);
 
   // App başlatıldığında saved token'ı kontrol et
   useEffect(() => {

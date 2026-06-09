@@ -20,12 +20,6 @@ function getInitials(title = '') {
 function buildGoogleBooksQuery(book = {}) {
   const parts = [];
 
-  if (book.isbn) {
-    // isbn normalizasyonu
-    const normalizedIsbn = String(book.isbn).replace(/[^0-9Xx]/g, '');
-    if (normalizedIsbn) return `isbn:${encodeURIComponent(normalizedIsbn)}`;
-  }
-
   if (book.title) {
     parts.push(`intitle:${encodeURIComponent(book.title)}`);
   }
@@ -37,6 +31,25 @@ function buildGoogleBooksQuery(book = {}) {
   return parts.join('+');
 }
 
+function buildGoogleBooksIsbnQuery(isbn) {
+  const normalizedIsbn = String(isbn || '').replace(/[^0-9Xx]/g, '');
+  return normalizedIsbn ? `isbn:${encodeURIComponent(normalizedIsbn)}` : '';
+}
+
+function normalizeCoverUrl(url) {
+  if (!url) return null;
+  const secureUrl = url.replace('http://', 'https://');
+
+  if (secureUrl.includes('books.google.com') || secureUrl.includes('googleusercontent.com')) {
+    return secureUrl
+      .replace(/zoom=\d/, 'zoom=2')
+      .replace(/&edge=curl/g, '')
+      .replace(/&source=gbs_api/g, '');
+  }
+
+  return secureUrl;
+}
+
 async function fetchCoverForQuery(query) {
   if (!query) return null;
   try {
@@ -45,7 +58,23 @@ async function fetchCoverForQuery(query) {
     const data = await response.json();
     const item = data.items?.[0];
     const thumbnail = item?.volumeInfo?.imageLinks?.thumbnail || item?.volumeInfo?.imageLinks?.smallThumbnail;
-    return thumbnail ? thumbnail.replace('http://', 'https://') : null;
+    return normalizeCoverUrl(thumbnail);
+  } catch (e) {
+    return null;
+  }
+}
+
+async function fetchOpenLibraryCover(book = {}) {
+  try {
+    const query = [book.title, book.author].filter(Boolean).map(value => encodeURIComponent(value)).join('+');
+    if (!query) return null;
+
+    const response = await fetch(`https://openlibrary.org/search.json?q=${query}&limit=1`);
+    if (!response.ok) return null;
+
+    const data = await response.json();
+    const coverId = data.docs?.[0]?.cover_i;
+    return coverId ? normalizeCoverUrl(`https://covers.openlibrary.org/b/id/${coverId}-L.jpg`) : null;
   } catch (e) {
     return null;
   }
@@ -60,24 +89,8 @@ async function checkImageUrl(url) {
   }
 }
 
-async function fetchCoverUrl(book) {
+export async function fetchBookCoverUrl(book) {
   if (!book) return null;
-
-  // önce isbn dene, sonuç yoksa yazar + kitap adı kombinasyonunu dene
-  if (book.isbn) {
-    const isbnQuery = buildGoogleBooksQuery({ isbn: book.isbn });
-    const byIsbn = await fetchCoverForQuery(isbnQuery);
-    if (byIsbn) return byIsbn;
-    // try Open Library covers by ISBN
-    try {
-      const normalizedIsbn = String(book.isbn).replace(/[^0-9Xx]/g, '');
-      if (normalizedIsbn) {
-        const olUrl = `https://covers.openlibrary.org/b/isbn/${normalizedIsbn}-L.jpg`;
-        const ok = await checkImageUrl(olUrl);
-        if (ok) return olUrl;
-      }
-    } catch (e) {}
-  }
 
   const titleAuthorQuery = buildGoogleBooksQuery({ title: book.title, author: book.author });
   if (titleAuthorQuery) {
@@ -85,7 +98,6 @@ async function fetchCoverUrl(book) {
     if (byTitle) return byTitle;
   }
 
-  // Fallback: try a simple free-text search with title and author (less strict)
   try {
     const simple = [book.title, book.author].filter(Boolean).map(s => encodeURIComponent(s)).join('+');
     if (simple) {
@@ -96,6 +108,24 @@ async function fetchCoverUrl(book) {
     // ignore
   }
 
+  const byOpenLibrary = await fetchOpenLibraryCover(book);
+  if (byOpenLibrary) return byOpenLibrary;
+
+  if (book.isbn) {
+    const isbnQuery = buildGoogleBooksIsbnQuery(book.isbn);
+    const byIsbn = await fetchCoverForQuery(isbnQuery);
+    if (byIsbn) return byIsbn;
+
+    try {
+      const normalizedIsbn = String(book.isbn).replace(/[^0-9Xx]/g, '');
+      if (normalizedIsbn) {
+        const olUrl = `https://covers.openlibrary.org/b/isbn/${normalizedIsbn}-L.jpg`;
+        const ok = await checkImageUrl(olUrl);
+        if (ok) return normalizeCoverUrl(olUrl);
+      }
+    } catch (e) {}
+  }
+
   return null;
 }
 
@@ -103,7 +133,9 @@ export default function BookCard({ book, onPress, compact = false }) {
   const { getCoverForBook, setCoverForBook } = useContext(BooksContext);
   const { colors } = useContext(ThemeContext);
   const cacheKey = book?.id ?? book?.isbn ?? `${book?.title || ''}-${book?.author || ''}`;
-  const [coverUrl, setCoverUrl] = useState(book?.coverUrl || getCoverForBook(cacheKey));
+  const initialCoverUrl = normalizeCoverUrl(book?.coverUrl || book?.cover_url || getCoverForBook(cacheKey));
+  const [coverUrl, setCoverUrl] = useState(initialCoverUrl);
+  const [failedCoverUrl, setFailedCoverUrl] = useState(null);
   const initials = useMemo(() => getInitials(book.title), [book.title]);
   const stockCount = Number(book.available_copies || 0);
   const stockLabel = stockCount > 0 ? `Stokta ${stockCount}` : 'Tükendi';
@@ -118,9 +150,16 @@ export default function BookCard({ book, onPress, compact = false }) {
       return () => {};
     }
 
+    if (book?.coverUrl || book?.cover_url) {
+      const nextCoverUrl = normalizeCoverUrl(book.coverUrl || book.cover_url);
+      setCoverUrl(nextCoverUrl);
+      setCoverForBook(cacheKey, nextCoverUrl);
+      return () => {};
+    }
+
     const loadCover = async () => {
       try {
-        const nextCoverUrl = await fetchCoverUrl(book);
+        const nextCoverUrl = await fetchBookCoverUrl(book);
 
         if (isMounted) {
           setCoverUrl(nextCoverUrl);
@@ -140,7 +179,29 @@ export default function BookCard({ book, onPress, compact = false }) {
     return () => {
       isMounted = false;
     };
-  }, [book.author, book.isbn, book.title, cacheKey, getCoverForBook, setCoverForBook]);
+  }, [book.author, book.coverUrl, book.cover_url, book.isbn, book.title, cacheKey, getCoverForBook, setCoverForBook]);
+
+  const handleCoverError = async () => {
+    const currentUrl = coverUrl;
+    setFailedCoverUrl(currentUrl);
+
+    try {
+      const fallbackUrl = await fetchBookCoverUrl({
+        ...book,
+        isbn: ''
+      });
+
+      if (fallbackUrl && fallbackUrl !== currentUrl) {
+        setCoverUrl(fallbackUrl);
+        setCoverForBook(cacheKey, fallbackUrl);
+        return;
+      }
+    } catch (error) {
+      // Harfli kapak fallback olarak kullanılır.
+    }
+
+    setCoverUrl(null);
+  };
 
   return (
     <Pressable
@@ -152,8 +213,8 @@ export default function BookCard({ book, onPress, compact = false }) {
       onPress={onPress}
     >
       <View style={[styles.cover, { backgroundColor: `hsl(${coverHue}, 45%, 28%)` }]}>
-        {coverUrl ? (
-          <Image source={{ uri: coverUrl }} style={styles.coverImage} resizeMode="cover" />
+        {coverUrl && coverUrl !== failedCoverUrl ? (
+          <Image source={{ uri: coverUrl }} style={styles.coverImage} resizeMode="cover" onError={handleCoverError} />
         ) : (
           <Text style={[styles.coverText, { color: colors.card }]}>{initials}</Text>
         )}
@@ -196,9 +257,8 @@ const styles = StyleSheet.create({
   },
   cover: {
     width: 72,
-    minHeight: 96,
+    height: 108,
     borderRadius: 16,
-    padding: 10,
     justifyContent: 'space-between',
     overflow: 'hidden'
   },
